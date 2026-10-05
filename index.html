@@ -1,0 +1,974 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>台灣寶島名產・健康大富翁（銀髮樂齡版）</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Canvas Confetti CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@600;800;900&display=swap');
+    
+    * {
+      box-sizing: border-box;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      font-family: 'Noto Sans TC', sans-serif;
+      background: linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 40%, #eff6ff 100%);
+      overflow-x: hidden;
+    }
+
+    /* 3D Interactive Dice */
+    .dice-scene {
+      width: 86px;
+      height: 86px;
+      perspective: 600px;
+    }
+    .dice-cube {
+      width: 100%;
+      height: 100%;
+      position: relative;
+      transform-style: preserve-3d;
+      transition: transform 0.1s linear;
+    }
+    .dice-face {
+      position: absolute;
+      width: 86px;
+      height: 86px;
+      background: #ffffff;
+      border: 4px solid #059669;
+      border-radius: 18px;
+      display: grid;
+      padding: 10px;
+      box-shadow: inset 0 0 10px rgba(0,0,0,0.08), 0 8px 20px rgba(0,0,0,0.18);
+      grid-template-columns: repeat(3, 1fr);
+      grid-template-rows: repeat(3, 1fr);
+      align-items: center;
+      justify-items: center;
+    }
+    .pip {
+      width: 15px;
+      height: 15px;
+      background-color: #1e293b;
+      border-radius: 50%;
+      box-shadow: inset 0 1px 3px rgba(0,0,0,0.4);
+    }
+    .pip-red {
+      background-color: #dc2626 !important;
+      width: 26px;
+      height: 26px;
+    }
+
+    /* 6x5 Board Grid Layout */
+    .board-grid {
+      display: grid;
+      grid-template-columns: repeat(6, minmax(0, 1fr));
+      grid-template-rows: repeat(5, minmax(105px, 1fr));
+      gap: 10px;
+    }
+
+    /* Active landing tile highlight */
+    .tile-highlight {
+      animation: tilePulse 1.3s infinite alternate ease-in-out;
+      border-color: #f59e0b !important;
+      background-color: #fef3c7 !important;
+      transform: scale(1.03);
+      z-index: 10;
+    }
+    @keyframes tilePulse {
+      0% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.7); }
+      100% { box-shadow: 0 0 0 14px rgba(245, 158, 11, 0); }
+    }
+
+    /* Floating token piece */
+    .token-floating {
+      animation: tokenHop 1.1s ease-in-out infinite alternate;
+    }
+    @keyframes tokenHop {
+      0% { transform: translateY(0px) scale(1); }
+      100% { transform: translateY(-5px) scale(1.1); }
+    }
+  </style>
+</head>
+<body class="min-h-screen text-slate-800 flex flex-col justify-between p-2 md:p-4">
+
+  <!-- Top Navigation & Controls -->
+  <header class="max-w-7xl mx-auto w-full flex flex-wrap items-center justify-between gap-3 bg-white/95 backdrop-blur-md px-5 py-3 rounded-2xl shadow-sm border border-emerald-200 mb-2">
+    <div class="flex items-center gap-3">
+      <span class="text-4xl md:text-5xl">🏝️</span>
+      <div>
+        <h1 class="text-2xl md:text-3xl font-black text-emerald-950 tracking-wide flex items-center gap-2">
+          台灣寶島名產・健康大富翁
+        </h1>
+        <p class="text-sm md:text-base font-bold text-emerald-700">全台18站美食環島・肌力動一動・認知動動腦</p>
+      </div>
+    </div>
+
+    <!-- Quick Utilities -->
+    <div class="flex items-center gap-2 md:gap-3">
+      <button id="soundToggleBtn" onclick="toggleSound()" class="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-800 font-black border border-emerald-200 transition text-sm md:text-base">
+        <span id="soundIcon">🔊</span>
+        <span id="soundText">音效開</span>
+      </button>
+
+      <button onclick="triggerCheer()" class="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-800 font-black border border-amber-200 transition text-sm md:text-base">
+        <span>👏</span>
+        <span>掌聲鼓勵</span>
+      </button>
+
+      <button onclick="resetGame()" class="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-black border border-slate-300 transition text-sm md:text-base">
+        <span>🔄</span>
+        <span>重置遊戲</span>
+      </button>
+
+      <button onclick="toggleFullScreen()" class="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-blue-50 hover:bg-blue-100 text-blue-800 font-black border border-blue-200 transition text-sm md:text-base">
+        <span>⛶</span>
+        <span>全螢幕</span>
+      </button>
+    </div>
+  </header>
+
+  <main class="max-w-7xl mx-auto w-full flex-grow flex flex-col gap-3">
+    <!-- Scoreboard & Current Turn Dashboard -->
+    <div class="grid grid-cols-1 md:grid-cols-12 gap-3 items-center">
+      
+      <!-- Red Team -->
+      <div id="redTeamCard" class="md:col-span-4 bg-white rounded-2xl p-4 border-4 border-rose-500 shadow-md flex items-center justify-between transition-all duration-300 scale-[1.02] bg-rose-50/60">
+        <div class="flex items-center gap-3">
+          <div class="w-14 h-14 rounded-2xl bg-rose-500 text-white flex items-center justify-center text-3xl font-black shadow-inner">
+            🍎
+          </div>
+          <div>
+            <div class="flex items-center gap-2">
+              <input type="text" id="redTeamName" value="吉祥紅隊" class="font-black text-xl md:text-2xl text-rose-700 bg-transparent border-b border-transparent hover:border-rose-300 focus:outline-none focus:border-rose-500 max-w-[130px]" title="點擊可自訂隊名">
+              <span id="redBadge" class="text-xs bg-rose-600 text-white font-black px-2 py-0.5 rounded-full animate-bounce">輪到你</span>
+            </div>
+            <p class="text-xs font-bold text-rose-600 mt-0.5">目前：<span id="redLocationText" class="text-rose-950 font-black">第1站 基隆 (廟口鼎邊趖)</span></p>
+          </div>
+        </div>
+        <div class="text-right">
+          <span class="text-xs font-black text-slate-400 block">團隊總分</span>
+          <span id="redScore" class="text-3xl md:text-4xl font-black text-rose-600">0</span>
+          <span class="text-sm font-extrabold text-slate-500">分</span>
+        </div>
+      </div>
+
+      <!-- Turn & Randomness Banner -->
+      <div class="md:col-span-4 bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-700 rounded-2xl p-3 md:p-4 text-white shadow-lg text-center flex flex-row md:flex-col justify-around items-center gap-1">
+        <div>
+          <span class="text-xs uppercase tracking-wider font-extrabold text-emerald-200 block">兩隊輪流・獨立隨機骰子</span>
+          <div id="turnBanner" class="text-2xl md:text-3xl font-black text-yellow-300 tracking-wide">
+            🍎 吉祥紅隊 請擲骰
+          </div>
+        </div>
+        <div class="text-xs text-emerald-100 font-bold bg-emerald-800/50 px-3 py-1 rounded-full border border-emerald-400/40">
+          🎲 步數完全隨機（1 ~ 6 步）
+        </div>
+      </div>
+
+      <!-- Blue Team -->
+      <div id="blueTeamCard" class="md:col-span-4 bg-white rounded-2xl p-4 border-4 border-slate-200 shadow-md flex items-center justify-between transition-all duration-300">
+        <div class="flex items-center gap-3">
+          <div class="w-14 h-14 rounded-2xl bg-sky-500 text-white flex items-center justify-center text-3xl font-black shadow-inner">
+            🚙
+          </div>
+          <div>
+            <div class="flex items-center gap-2">
+              <input type="text" id="blueTeamName" value="如意藍隊" class="font-black text-xl md:text-2xl text-sky-700 bg-transparent border-b border-transparent hover:border-sky-300 focus:outline-none focus:border-sky-500 max-w-[130px]" title="點擊可自訂隊名">
+              <span id="blueBadge" class="hidden text-xs bg-sky-600 text-white font-black px-2 py-0.5 rounded-full animate-bounce">輪到你</span>
+            </div>
+            <p class="text-xs font-bold text-sky-600 mt-0.5">目前：<span id="blueLocationText" class="text-sky-950 font-black">第1站 基隆 (廟口鼎邊趖)</span></p>
+          </div>
+        </div>
+        <div class="text-right">
+          <span class="text-xs font-black text-slate-400 block">團隊總分</span>
+          <span id="blueScore" class="text-3xl md:text-4xl font-black text-sky-600">0</span>
+          <span class="text-sm font-extrabold text-slate-500">分</span>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- 6x5 Board Grid -->
+    <div class="board-grid relative bg-emerald-950/10 p-3 rounded-3xl border-2 border-emerald-300">
+      
+      <!-- Center Interactive Stage (Cols 2-5, Rows 2-4) -->
+      <div class="col-start-2 col-end-6 row-start-2 row-end-5 bg-white/95 rounded-2xl border-4 border-dashed border-emerald-400 p-4 md:p-6 flex flex-col justify-center items-center text-center shadow-inner relative overflow-hidden">
+        
+        <div class="absolute inset-0 flex items-center justify-center opacity-10 pointer-events-none">
+          <span class="text-[170px] select-none">🗺️</span>
+        </div>
+
+        <div class="relative z-10 flex flex-col items-center max-w-lg w-full">
+          <span id="centerStatusSubtitle" class="text-sm md:text-base font-black tracking-wider px-4 py-1 bg-emerald-100 text-emerald-900 rounded-full mb-1 border border-emerald-300 shadow-sm">
+            台灣名產健康環島
+          </span>
+          <h2 id="centerStatusTitle" class="text-2xl md:text-3xl font-black text-slate-800 mb-2">
+            輪到 <span id="centerCurrentTeamSpan" class="text-rose-600 underline decoration-rose-300 underline-offset-4">吉祥紅隊</span> 長輩擲骰！
+          </h2>
+
+          <!-- 3D Dice Display & Roll Button -->
+          <div class="flex items-center justify-center gap-6 my-2">
+            <div class="dice-scene cursor-pointer" onclick="rollDiceAction()" title="點擊擲骰">
+              <div id="diceCube" class="dice-cube hover:scale-105 transition-transform duration-150">
+                <div class="dice-face" id="diceFaceDisplay"></div>
+              </div>
+            </div>
+
+            <button id="rollDiceBtn" onclick="rollDiceAction()" class="bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 hover:from-amber-600 hover:to-orange-700 active:scale-95 text-white font-black text-2xl md:text-3xl px-8 py-4 rounded-2xl shadow-xl border-4 border-amber-200 transition-all flex items-center gap-3">
+              <span class="animate-bounce">🎲</span>
+              <span>按我擲骰子</span>
+            </button>
+          </div>
+
+          <p id="diceTipText" class="text-slate-600 text-base md:text-lg font-black mt-2 min-h-[28px]">
+            點擊擲骰子，隨機出現 1 ~ 6 步！
+          </p>
+
+          <div class="flex items-center gap-3 mt-3 pt-3 border-t border-slate-200">
+            <button onclick="openCurrentStationModal()" class="text-sm bg-emerald-100 hover:bg-emerald-200 text-emerald-950 font-black px-4 py-2 rounded-xl border border-emerald-300 transition flex items-center gap-1.5 shadow-sm">
+              <span>📋</span>
+              <span>查看當前站點任務題目</span>
+            </button>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- 18 Tiles will be inserted dynamically -->
+    </div>
+  </main>
+
+  <!-- Direct Task Modal (Keeps concrete questions, strictly removed all teacher hints) -->
+  <div id="taskModal" class="fixed inset-0 bg-slate-900/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-3 md:p-6 transition-opacity">
+    <div class="bg-white w-full max-w-3xl rounded-3xl shadow-2xl border-4 border-emerald-400 overflow-hidden transform scale-95 transition-transform duration-200" id="taskModalContent">
+      
+      <!-- Modal Header (Type, City & Specialty) -->
+      <div id="taskHeaderBg" class="p-6 md:p-8 text-white flex items-center justify-between bg-gradient-to-r from-amber-500 to-orange-600">
+        <div class="flex items-center gap-4">
+          <span id="taskTypeIcon" class="text-5xl md:text-6xl">💪</span>
+          <div>
+            <div class="flex items-center gap-2">
+              <span id="taskTypeBadge" class="bg-white/20 text-white font-black text-base md:text-lg px-4 py-1 rounded-full uppercase tracking-wider backdrop-blur-sm border border-white/30">
+                💪 肌力挑戰
+              </span>
+              <span id="modalTeamTag" class="bg-yellow-400 text-yellow-950 font-black text-sm md:text-base px-3 py-1 rounded-full shadow-sm">
+                紅隊挑戰中
+              </span>
+            </div>
+            <h3 id="taskCityTitle" class="text-3xl md:text-4xl font-black mt-2 tracking-wide">
+              基隆市・廟口鼎邊趖
+            </h3>
+          </div>
+        </div>
+        <div class="text-6xl opacity-30 select-none" id="taskHeaderEmoji">🥣</div>
+      </div>
+
+      <!-- Modal Body (Pure question only, large clear typography) -->
+      <div class="p-6 md:p-10 space-y-6 text-center">
+        
+        <div class="bg-emerald-50/70 border-3 border-dashed border-emerald-300 rounded-3xl p-6 md:p-8 shadow-inner">
+          <div class="text-emerald-800 text-sm md:text-base font-black tracking-wider uppercase mb-2">
+            🎯 挑戰題目
+          </div>
+          <!-- Pure Question Text: Extra Large & High Contrast -->
+          <div id="taskQuestionText" class="text-2xl md:text-3xl font-black text-slate-800 leading-snug">
+            雙手握拳向前推 10 下，像在推大蒸籠！
+          </div>
+        </div>
+
+        <!-- Action / Scoring Panel -->
+        <div class="bg-slate-50 border border-slate-200 rounded-2xl p-4 flex flex-wrap items-center justify-between gap-3">
+          <span class="text-base font-extrabold text-slate-700 flex items-center gap-1.5">
+            <span>🎖️</span>
+            <span>評分給獎：</span>
+          </span>
+          <div class="flex flex-wrap items-center gap-2">
+            <button onclick="awardScore(10)" class="bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white font-black text-lg px-6 py-2.5 rounded-xl shadow transition">
+              ✅ 完成挑戰 (+10分)
+            </button>
+            <button onclick="awardScore(20)" class="bg-amber-600 hover:bg-amber-700 active:scale-95 text-white font-black text-base px-4 py-2.5 rounded-xl shadow transition">
+              ⭐ 特優表現 (+20分)
+            </button>
+            <button onclick="promptCustomScore()" class="bg-indigo-600 hover:bg-indigo-700 active:scale-95 text-white font-black text-base px-4 py-2.5 rounded-xl shadow transition">
+              自訂分數
+            </button>
+            <button onclick="skipAndNext()" class="bg-slate-200 hover:bg-slate-300 text-slate-700 font-extrabold text-base px-4 py-2.5 rounded-xl transition">
+              過關不加分
+            </button>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+  </div>
+
+  <footer class="max-w-7xl mx-auto w-full text-center py-2 text-xs md:text-sm font-bold text-emerald-900/80">
+    🌟 20位長輩一同參與：全班坐姿一起做動作，活力滿滿、安全第一！
+  </footer>
+
+  <script>
+    // Pure Web Audio API Synthesizer (No external sound files required)
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
+    let audioCtx = null;
+    let soundEnabled = true;
+
+    function initAudio() {
+      if (!audioCtx) {
+        audioCtx = new AudioContext();
+      }
+      if (audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
+    }
+
+    function playTone(freq, duration, type = 'sine', gainLevel = 0.15) {
+      if (!soundEnabled) return;
+      try {
+        initAudio();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = type;
+        osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+        gain.gain.setValueAtTime(gainLevel, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + duration);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start();
+        osc.stop(audioCtx.currentTime + duration);
+      } catch (e) {
+        console.warn('Audio play error:', e);
+      }
+    }
+
+    function playDiceTick() {
+      playTone(320 + Math.random() * 260, 0.06, 'triangle', 0.12);
+    }
+
+    function playHopStep(stepIdx) {
+      const baseFreq = 420 + (stepIdx * 45);
+      playTone(baseFreq, 0.12, 'sine', 0.18);
+    }
+
+    function playSuccessChime() {
+      if (!soundEnabled) return;
+      try {
+        initAudio();
+        const notes = [523.25, 659.25, 783.99, 1046.50]; // C5, E5, G5, C6
+        notes.forEach((freq, idx) => {
+          setTimeout(() => {
+            playTone(freq, 0.35, 'triangle', 0.2);
+          }, idx * 110);
+        });
+      } catch (e) {}
+    }
+
+    function playCheerFanfare() {
+      if (!soundEnabled) return;
+      try {
+        initAudio();
+        const notes = [440, 554.37, 659.25, 880];
+        notes.forEach((freq, idx) => {
+          setTimeout(() => playTone(freq, 0.28, 'sine', 0.22), idx * 100);
+        });
+      } catch (e) {}
+    }
+
+    function toggleSound() {
+      soundEnabled = !soundEnabled;
+      const soundIcon = document.getElementById('soundIcon');
+      const soundText = document.getElementById('soundText');
+      if (soundEnabled) {
+        soundIcon.innerText = '🔊';
+        soundText.innerText = '音效開';
+        playTone(600, 0.15);
+      } else {
+        soundIcon.innerText = '🔇';
+        soundText.innerText = '音效關';
+      }
+    }
+  </script>
+
+  <script>
+    // 18 Stations: Taiwan main island + Penghu
+    // All questions preserved, all teacher/coach hints stripped.
+    const boardStations = [
+      {
+        id: 0,
+        city: "基隆",
+        food: "廟口鼎邊趖",
+        icon: "🥣",
+        type: "muscle",
+        task: "雙手握拳向前推 10 下，像在推大蒸籠一樣把香氣推出去！",
+        grid: { row: 1, col: 1 }
+      },
+      {
+        id: 1,
+        city: "台北",
+        food: "木柵鐵觀音",
+        icon: "🍵",
+        type: "cognitive",
+        task: "請說出 3 種泡茶時長輩最喜歡吃的傳統點心或茶食！",
+        grid: { row: 1, col: 2 }
+      },
+      {
+        id: 2,
+        city: "新北",
+        food: "九份芋圓",
+        icon: "🍠",
+        type: "muscle",
+        task: "坐好挺胸，雙手雙腳輪流踏步 15 下，像在九份老街爬石梯！",
+        grid: { row: 1, col: 3 }
+      },
+      {
+        id: 3,
+        city: "桃園",
+        food: "大溪黑豆干",
+        icon: "🥢",
+        type: "cognitive",
+        task: "請說出 3 種豆腐或黃豆製成的美味料理！",
+        grid: { row: 1, col: 4 }
+      },
+      {
+        id: 4,
+        city: "新竹",
+        food: "城隍廟摃丸",
+        icon: "🥟",
+        type: "muscle",
+        task: "雙手在空中做「捏摃丸」動作，用力抓緊拳頭再全力張開手指 12 次！",
+        grid: { row: 1, col: 5 }
+      },
+      {
+        id: 5,
+        city: "苗栗",
+        food: "大湖草莓",
+        icon: "🍓",
+        type: "cognitive",
+        task: "請快速說出 3 種紅色的水果！",
+        grid: { row: 1, col: 6 }
+      },
+      {
+        id: 6,
+        city: "台中",
+        food: "正宗太陽餅",
+        icon: "☀️",
+        type: "muscle",
+        task: "雙手合十由胸前向上伸展，在空中畫一個大大的太陽 6 次！",
+        grid: { row: 2, col: 6 }
+      },
+      {
+        id: 7,
+        city: "彰化",
+        food: "八卦山肉圓",
+        icon: "🥟",
+        type: "cognitive",
+        task: "吃肉圓最想沾甜米醬還是辣椒醬？全隊長輩大聲喊出最愛的吃法！",
+        grid: { row: 3, col: 6 }
+      },
+      {
+        id: 8,
+        city: "南投",
+        food: "日月潭紅茶",
+        icon: "☕",
+        type: "muscle",
+        task: "雙手在胸前左右輪流做「端茶杯向左右鄰居敬茶」轉體伸展動作 8 次！",
+        grid: { row: 4, col: 6 }
+      },
+      {
+        id: 9,
+        city: "雲林",
+        food: "古坑台灣咖啡",
+        icon: "☕",
+        type: "muscle",
+        task: "坐姿雙手扶椅，雙腳膝蓋輪流向上抬起各 8 下！",
+        grid: { row: 5, col: 6 }
+      },
+      {
+        id: 10,
+        city: "嘉義",
+        food: "正宗火雞肉飯",
+        icon: "🍚",
+        type: "cognitive",
+        task: "請說出道地火雞肉飯最常見的 2 種配料（如黃蘿蔔、油蔥酥等）！",
+        grid: { row: 5, col: 5 }
+      },
+      {
+        id: 11,
+        city: "台南",
+        food: "安平鮮蝦捲",
+        icon: "🍤",
+        type: "muscle",
+        task: "雙腳坐姿輪流做「腳尖著地提腳跟」與「腳跟著地翹腳尖」12 次，促進下肢血液循環！",
+        grid: { row: 5, col: 4 }
+      },
+      {
+        id: 12,
+        city: "高雄",
+        food: "旗津烤黑輪",
+        icon: "🍢",
+        type: "cognitive",
+        task: "請說出 3 樣到海邊、港口或漁港會買的海鮮特產！",
+        grid: { row: 5, col: 3 }
+      },
+      {
+        id: 13,
+        city: "屏東",
+        food: "萬巒香烤豬腳",
+        icon: "🍖",
+        type: "muscle",
+        task: "坐好挺胸，單腳向前平舉伸直小腿停留 3 秒，雙腳各做 4 次！",
+        grid: { row: 5, col: 2 }
+      },
+      {
+        id: 14,
+        city: "台東",
+        food: "太麻里釋迦",
+        icon: "🍈",
+        type: "cognitive",
+        task: "請說出台東一個知名的景點（例如知本溫泉、伯朗大道、三仙台等）！",
+        grid: { row: 5, col: 1 }
+      },
+      {
+        id: 15,
+        city: "花蓮",
+        food: "花蓮手工麻糬",
+        icon: "🍡",
+        type: "muscle",
+        task: "像擣麻糬一樣，雙手握空拳由上往下輕輕拍捶大腿前側與外側放鬆 15 次！",
+        grid: { row: 4, col: 1 }
+      },
+      {
+        id: 16,
+        city: "宜蘭",
+        food: "三星蔥油餅",
+        icon: "🧅",
+        type: "cognitive",
+        task: "青蔥是料理的好幫手！請說出 2 道一定要加蔥才好吃的家常菜！",
+        grid: { row: 3, col: 1 }
+      },
+      {
+        id: 17,
+        city: "澎湖",
+        food: "古早味黑糖糕",
+        icon: "🧁",
+        type: "muscle",
+        task: "雙手向兩側水平展開像海鷗拍翅膀，緩慢向上拍動伸展肩關節 10 次！",
+        grid: { row: 2, col: 1 }
+      }
+    ];
+
+    // State Variables
+    let currentTurn = 'red'; // 'red' or 'blue'
+    let isRolling = false;
+    const scores = { red: 0, blue: 0 };
+    const positions = { red: 0, blue: 0 }; // 0 to 17
+    let currentModalStation = null;
+  </script>
+
+  <script>
+    // Render Board Grid
+    function renderBoard() {
+      const container = document.querySelector('.board-grid');
+      
+      boardStations.forEach((station) => {
+        const tile = document.createElement('div');
+        tile.id = `station-${station.id}`;
+        tile.style.gridRowStart = station.grid.row;
+        tile.style.gridColumnStart = station.grid.col;
+
+        const isMuscle = station.type === 'muscle';
+        const typeBadgeColor = isMuscle 
+          ? 'bg-amber-100 text-amber-900 border-amber-300' 
+          : 'bg-indigo-100 text-indigo-900 border-indigo-300';
+        const typeName = isMuscle ? '💪 肌力' : '🧠 認知';
+
+        tile.className = `bg-white rounded-2xl p-2 md:p-2.5 border-2 border-slate-200 shadow-sm flex flex-col justify-between items-center text-center relative hover:shadow-md transition-all cursor-pointer`;
+        tile.onclick = () => openStationModal(station);
+
+        tile.innerHTML = `
+          <div class="w-full flex items-center justify-between text-[11px] font-black">
+            <span class="px-1.5 py-0.5 rounded border ${typeBadgeColor}">${typeName}</span>
+            <span class="text-slate-400 font-extrabold">#${station.id + 1}</span>
+          </div>
+
+          <div class="my-0.5">
+            <div class="text-2xl md:text-3xl">${station.icon}</div>
+            <div class="font-black text-sm md:text-base text-slate-800 leading-tight">${station.city}</div>
+            <div class="text-xs font-extrabold text-emerald-700 truncate max-w-[85px] md:max-w-[115px]">${station.food}</div>
+          </div>
+
+          <div class="w-full flex justify-center items-center gap-1.5 min-h-[26px]" id="token-box-${station.id}">
+          </div>
+        `;
+
+        container.appendChild(tile);
+      });
+
+      renderDiceFace(1);
+      updateTokenPositions();
+      updateTurnUI();
+    }
+
+    // Render Dice Face Pip Configuration
+    function renderDiceFace(value) {
+      const face = document.getElementById('diceFaceDisplay');
+      face.innerHTML = '';
+
+      const pipMap = {
+        1: [{r:2, c:2, red: true}],
+        2: [{r:1, c:1}, {r:3, c:3}],
+        3: [{r:1, c:1}, {r:2, c:2}, {r:3, c:3}],
+        4: [{r:1, c:1}, {r:1, c:3}, {r:3, c:1}, {r:3, c:3}],
+        5: [{r:1, c:1}, {r:1, c:3}, {r:2, c:2}, {r:3, c:1}, {r:3, c:3}],
+        6: [{r:1, c:1}, {r:2, c:1}, {r:3, c:1}, {r:1, c:3}, {r:2, c:3}, {r:3, c:3}]
+      };
+
+      const pips = pipMap[value] || pipMap[1];
+      pips.forEach(p => {
+        const dot = document.createElement('div');
+        dot.className = `pip ${p.red ? 'pip-red' : ''}`;
+        dot.style.gridRowStart = p.r;
+        dot.style.gridColumnStart = p.c;
+        face.appendChild(dot);
+      });
+    }
+
+    // Update tokens on the board
+    function updateTokenPositions() {
+      for (let i = 0; i < boardStations.length; i++) {
+        const box = document.getElementById(`token-box-${i}`);
+        if (box) box.innerHTML = '';
+        const tile = document.getElementById(`station-${i}`);
+        if (tile) tile.classList.remove('tile-highlight');
+      }
+
+      // Red Token
+      const redBox = document.getElementById(`token-box-${positions.red}`);
+      if (redBox) {
+        const redPiece = document.createElement('div');
+        redPiece.className = 'w-6 h-6 md:w-7 md:h-7 rounded-full bg-rose-500 text-white flex items-center justify-center text-xs font-black shadow-md border-2 border-white token-floating';
+        redPiece.title = '紅隊位置';
+        redPiece.innerHTML = '🍎';
+        redBox.appendChild(redPiece);
+      }
+
+      // Blue Token
+      const blueBox = document.getElementById(`token-box-${positions.blue}`);
+      if (blueBox) {
+        const bluePiece = document.createElement('div');
+        bluePiece.className = 'w-6 h-6 md:w-7 md:h-7 rounded-full bg-sky-500 text-white flex items-center justify-center text-xs font-black shadow-md border-2 border-white token-floating';
+        bluePiece.title = '藍隊位置';
+        bluePiece.innerHTML = '🚙';
+        blueBox.appendChild(bluePiece);
+      }
+
+      // Highlight active team tile
+      const activeIdx = positions[currentTurn];
+      const activeTile = document.getElementById(`station-${activeIdx}`);
+      if (activeTile) {
+        activeTile.classList.add('tile-highlight');
+      }
+
+      // Update location indicator
+      document.getElementById('redLocationText').innerText = 
+        `第${positions.red + 1}站 ${boardStations[positions.red].city} (${boardStations[positions.red].food})`;
+      document.getElementById('blueLocationText').innerText = 
+        `第${positions.blue + 1}站 ${boardStations[positions.blue].city} (${boardStations[positions.blue].food})`;
+    }
+
+    // Update Turn Header & Banner UI
+    function updateTurnUI() {
+      const isRed = currentTurn === 'red';
+      const redName = document.getElementById('redTeamName').value || '吉祥紅隊';
+      const blueName = document.getElementById('blueTeamName').value || '如意藍隊';
+
+      const redCard = document.getElementById('redTeamCard');
+      const blueCard = document.getElementById('blueTeamCard');
+      const redBadge = document.getElementById('redBadge');
+      const blueBadge = document.getElementById('blueBadge');
+
+      if (isRed) {
+        redCard.classList.add('border-rose-500', 'bg-rose-50/60', 'scale-[1.02]');
+        redCard.classList.remove('border-slate-200');
+        redBadge.classList.remove('hidden');
+
+        blueCard.classList.remove('border-sky-500', 'bg-sky-50/60', 'scale-[1.02]');
+        blueCard.classList.add('border-slate-200');
+        blueBadge.classList.add('hidden');
+
+        document.getElementById('turnBanner').innerHTML = `🍎 ${redName} 請擲骰`;
+        document.getElementById('centerCurrentTeamSpan').innerText = redName;
+        document.getElementById('centerCurrentTeamSpan').className = 'text-rose-600 underline decoration-rose-300 underline-offset-4';
+      } else {
+        blueCard.classList.add('border-sky-500', 'bg-sky-50/60', 'scale-[1.02]');
+        blueCard.classList.remove('border-slate-200');
+        blueBadge.classList.remove('hidden');
+
+        redCard.classList.remove('border-rose-500', 'bg-rose-50/60', 'scale-[1.02]');
+        redCard.classList.add('border-slate-200');
+        redBadge.classList.add('hidden');
+
+        document.getElementById('turnBanner').innerHTML = `🚙 ${blueName} 請擲骰`;
+        document.getElementById('centerCurrentTeamSpan').innerText = blueName;
+        document.getElementById('centerCurrentTeamSpan').className = 'text-sky-600 underline decoration-sky-300 underline-offset-4';
+      }
+    }
+  </script>
+
+  <script>
+    // Independent Random Integer 1 to 6
+    function getRandomDiceRoll() {
+      if (window.crypto && window.crypto.getRandomValues) {
+        const arr = new Uint32Array(1);
+        window.crypto.getRandomValues(arr);
+        return (arr[0] % 6) + 1;
+      }
+      return Math.floor(Math.random() * 6) + 1;
+    }
+
+    // Roll Dice Action
+    function rollDiceAction() {
+      if (isRolling) return;
+      isRolling = true;
+      initAudio();
+
+      const btn = document.getElementById('rollDiceBtn');
+      btn.disabled = true;
+      btn.classList.add('opacity-50', 'cursor-not-allowed');
+
+      const cube = document.getElementById('diceCube');
+      const tip = document.getElementById('diceTipText');
+      const activeTeamName = currentTurn === 'red' 
+        ? (document.getElementById('redTeamName').value || '紅隊') 
+        : (document.getElementById('blueTeamName').value || '藍隊');
+
+      // True random integer from 1 to 6
+      const finalSteps = getRandomDiceRoll();
+
+      let rollTicks = 0;
+      const totalTicks = 12;
+
+      const rollTimer = setInterval(() => {
+        rollTicks++;
+        playDiceTick();
+
+        // 3D tumble animation
+        const randX = Math.floor(Math.random() * 360);
+        const randY = Math.floor(Math.random() * 360);
+        cube.style.transform = `rotateX(${randX}deg) rotateY(${randY}deg)`;
+
+        // Pip preview while rolling
+        const tempFace = Math.floor(Math.random() * 6) + 1;
+        renderDiceFace(tempFace);
+        tip.innerText = `🎲 ${activeTeamName} 骰子旋轉中...`;
+
+        if (rollTicks >= totalTicks) {
+          clearInterval(rollTimer);
+          cube.style.transform = `rotateX(0deg) rotateY(0deg)`;
+          renderDiceFace(finalSteps);
+
+          tip.innerText = `✨ ${activeTeamName} 擲出了【 ${finalSteps} 點 】！出發！`;
+          playTone(560, 0.2, 'triangle');
+
+          setTimeout(() => {
+            stepByStepMovement(finalSteps, 1);
+          }, 450);
+        }
+      }, 90);
+    }
+
+    // Step-by-step token hopping
+    function stepByStepMovement(remainingSteps, currentStepCount) {
+      if (remainingSteps <= 0) {
+        isRolling = false;
+        const btn = document.getElementById('rollDiceBtn');
+        btn.disabled = false;
+        btn.classList.remove('opacity-50', 'cursor-not-allowed');
+
+        const activeIndex = positions[currentTurn];
+        currentModalStation = boardStations[activeIndex];
+
+        playTone(680, 0.25, 'triangle');
+        setTimeout(() => {
+          openStationModal(currentModalStation);
+        }, 400);
+        return;
+      }
+
+      positions[currentTurn] = (positions[currentTurn] + 1) % boardStations.length;
+      playHopStep(currentStepCount);
+      updateTokenPositions();
+
+      setTimeout(() => {
+        stepByStepMovement(remainingSteps - 1, currentStepCount + 1);
+      }, 350);
+    }
+
+    // Open Modal: Displays pure question, completely without teacher tips/hints
+    function openStationModal(station) {
+      currentModalStation = station;
+      const modal = document.getElementById('taskModal');
+      const content = document.getElementById('taskModalContent');
+      const isMuscle = station.type === 'muscle';
+
+      const headerBg = document.getElementById('taskHeaderBg');
+      const typeBadge = document.getElementById('taskTypeBadge');
+      const typeIcon = document.getElementById('taskTypeIcon');
+      const headerEmoji = document.getElementById('taskHeaderEmoji');
+      const modalTeamTag = document.getElementById('modalTeamTag');
+
+      const teamName = currentTurn === 'red'
+        ? (document.getElementById('redTeamName').value || '紅隊')
+        : (document.getElementById('blueTeamName').value || '藍隊');
+
+      modalTeamTag.innerText = `${teamName} 挑戰中`;
+      headerEmoji.innerText = station.icon;
+
+      if (isMuscle) {
+        headerBg.className = 'p-6 md:p-8 text-white flex items-center justify-between bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600';
+        typeBadge.innerText = '💪 肌力挑戰';
+        typeIcon.innerText = '💪';
+      } else {
+        headerBg.className = 'p-6 md:p-8 text-white flex items-center justify-between bg-gradient-to-r from-indigo-600 via-blue-600 to-indigo-700';
+        typeBadge.innerText = '🧠 認知挑戰';
+        typeIcon.innerText = '🧠';
+      }
+
+      document.getElementById('taskCityTitle').innerText = `${station.city}・${station.food}`;
+      document.getElementById('taskQuestionText').innerText = station.task;
+
+      modal.classList.remove('hidden');
+      setTimeout(() => {
+        content.classList.remove('scale-95');
+        content.classList.add('scale-100');
+      }, 20);
+    }
+
+    function openCurrentStationModal() {
+      const activeIdx = positions[currentTurn];
+      openStationModal(boardStations[activeIdx]);
+    }
+  </script>
+
+  <script>
+    // Award score points
+    function awardScore(points) {
+      scores[currentTurn] += points;
+      document.getElementById(`${currentTurn}Score`).innerText = scores[currentTurn];
+      
+      playSuccessChime();
+
+      if (typeof confetti === 'function') {
+        confetti({
+          particleCount: 75,
+          spread: 80,
+          origin: { y: 0.6 }
+        });
+      }
+
+      closeTaskModal();
+      nextTurn();
+    }
+
+    // Prompt custom score input
+    function promptCustomScore() {
+      const input = prompt("請輸入給長輩的自訂得分（數字）：", "15");
+      if (input !== null) {
+        const val = parseInt(input, 10);
+        if (!isNaN(val)) {
+          awardScore(val);
+        }
+      }
+    }
+
+    // Skip and pass turn without points
+    function skipAndNext() {
+      closeTaskModal();
+      nextTurn();
+    }
+
+    function closeTaskModal() {
+      const modal = document.getElementById('taskModal');
+      const content = document.getElementById('taskModalContent');
+      content.classList.add('scale-95');
+      content.classList.remove('scale-100');
+      setTimeout(() => {
+        modal.classList.add('hidden');
+      }, 150);
+    }
+
+    // Pass turn to the other team
+    function nextTurn() {
+      currentTurn = (currentTurn === 'red') ? 'blue' : 'red';
+      updateTurnUI();
+      updateTokenPositions();
+
+      const teamName = currentTurn === 'red' 
+        ? (document.getElementById('redTeamName').value || '吉祥紅隊') 
+        : (document.getElementById('blueTeamName').value || '如意藍隊');
+
+      document.getElementById('centerStatusSubtitle').innerText = '回合交棒';
+      document.getElementById('centerStatusTitle').innerHTML = 
+        `換 <span class="${currentTurn === 'red' ? 'text-rose-600' : 'text-sky-600'} underline">${teamName}</span> 長輩擲骰！`;
+      document.getElementById('diceTipText').innerText = `請 ${teamName} 的長輩代表點擊「按我擲骰子」！`;
+    }
+
+    // Cheering fanfare
+    function triggerCheer() {
+      playCheerFanfare();
+      if (typeof confetti === 'function') {
+        confetti({
+          particleCount: 90,
+          spread: 90,
+          origin: { y: 0.5 }
+        });
+      }
+    }
+
+    // Reset game logic
+    function resetGame() {
+      scores.red = 0;
+      scores.blue = 0;
+      positions.red = 0;
+      positions.blue = 0;
+      currentTurn = 'red';
+      isRolling = false;
+
+      document.getElementById('redScore').innerText = '0';
+      document.getElementById('blueScore').innerText = '0';
+      document.getElementById('diceTipText').innerText = '點擊擲骰子，隨機出現 1 ~ 6 步！';
+      
+      closeTaskModal();
+      renderDiceFace(1);
+      updateTokenPositions();
+      updateTurnUI();
+    }
+
+    // Fullscreen presentation toggle
+    function toggleFullScreen() {
+      if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen().catch(err => {
+          console.warn(`Fullscreen error: ${err.message}`);
+        });
+      } else {
+        if (document.exitFullscreen) {
+          document.exitFullscreen();
+        }
+      }
+    }
+
+    // Initialize on window load
+    window.addEventListener('DOMContentLoaded', () => {
+      renderBoard();
+      document.body.addEventListener('click', initAudio, { once: true });
+    });
+  </script>
+</body>
+</html>
