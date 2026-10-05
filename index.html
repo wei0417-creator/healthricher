@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>台灣寶島名產・健康大富翁（聲光生物回饋 + 台灣民謠音樂版）</title>
+  <title>台灣寶島名產・健康大富翁（實體互動專用版）</title>
   <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
   <!-- Canvas Confetti CDN -->
@@ -26,7 +26,7 @@
       transition: box-shadow 0.4s ease;
     }
 
-    /* Ambient Screen Edge Glow (Biofeedback Light Frame) */
+    /* Ambient Screen Edge Glow */
     #ambientGlowOverlay {
       position: fixed;
       inset: 0;
@@ -34,47 +34,6 @@
       z-index: 40;
       box-shadow: inset 0 0 70px 10px rgba(239, 68, 68, 0.22);
       transition: box-shadow 0.5s ease;
-    }
-
-    /* 3D Interactive Tumbling Dice */
-    .dice-scene {
-      width: 90px;
-      height: 90px;
-      perspective: 600px;
-    }
-    .dice-cube {
-      width: 100%;
-      height: 100%;
-      position: relative;
-      transform-style: preserve-3d;
-      transition: transform 0.1s linear;
-    }
-    .dice-face {
-      position: absolute;
-      width: 90px;
-      height: 90px;
-      background: #ffffff;
-      border: 4px solid #059669;
-      border-radius: 20px;
-      display: grid;
-      padding: 10px;
-      box-shadow: inset 0 0 12px rgba(0,0,0,0.08), 0 10px 25px rgba(5, 150, 105, 0.25);
-      grid-template-columns: repeat(3, 1fr);
-      grid-template-rows: repeat(3, 1fr);
-      align-items: center;
-      justify-items: center;
-    }
-    .pip {
-      width: 16px;
-      height: 16px;
-      background-color: #1e293b;
-      border-radius: 50%;
-      box-shadow: inset 0 2px 4px rgba(0,0,0,0.4);
-    }
-    .pip-red {
-      background-color: #dc2626 !important;
-      width: 28px;
-      height: 28px;
     }
 
     /* 6x5 Board Grid Layout */
@@ -170,13 +129,13 @@
   <!-- Top Navigation & Controls -->
   <header class="max-w-7xl mx-auto w-full flex flex-wrap items-center justify-between gap-3 bg-white/95 backdrop-blur-md px-5 py-3 rounded-2xl shadow-sm border border-emerald-200 mb-2 relative z-30">
     <div class="flex items-center gap-3">
-      <span class="text-4xl md:text-5xl drop-shadow">🏝️</span>
+      <span class="text-4xl md:text-5xl drop-shadow">🏖️</span>
       <div>
         <h1 class="text-2xl md:text-3xl font-black text-emerald-950 tracking-wide flex items-center gap-2">
           台灣寶島名產・健康大富翁
-          <span class="text-xs bg-emerald-600 text-white font-extrabold px-2.5 py-0.5 rounded-full shadow-sm">民謠音樂版</span>
+          <span class="text-xs bg-amber-600 text-white font-extrabold px-2.5 py-0.5 rounded-full shadow-sm">實體互動專用版</span>
         </h1>
-        <p class="text-sm md:text-base font-bold text-emerald-700">18站名產環島・台灣民謠溫馨旋律・聲光生物回饋</p>
+        <p class="text-sm md:text-base font-bold text-emerald-700">支援實體海綿骰子／沙包擲準／轉盤輸入・台灣民謠溫馨旋律</p>
       </div>
     </div>
 
@@ -248,16 +207,16 @@
         </div>
       </div>
 
-      <!-- Turn & Randomness Indicator Banner -->
-      <div class="md:col-span-4 bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-700 rounded-2xl p-3 md:p-4 text-white shadow-lg text-center flex flex-row md:flex-col justify-around items-center gap-1 border-2 border-emerald-400">
+      <!-- Turn & Physical Step Notice Banner -->
+      <div class="md:col-span-4 bg-gradient-to-r from-amber-600 via-orange-600 to-amber-700 rounded-2xl p-3 md:p-4 text-white shadow-lg text-center flex flex-row md:flex-col justify-around items-center gap-1 border-2 border-amber-300">
         <div>
-          <span class="text-xs uppercase tracking-wider font-extrabold text-emerald-200 block">兩隊輪流・獨立真隨機擲骰</span>
+          <span class="text-xs uppercase tracking-wider font-extrabold text-amber-100 block">長輩實體投擲／轉盤／肢體成果</span>
           <div id="turnBanner" class="text-2xl md:text-3xl font-black text-yellow-300 tracking-wide drop-shadow">
-            🍎 吉祥紅隊 請擲骰
+            🍎 吉祥紅隊 準備前進
           </div>
         </div>
-        <div class="text-xs text-emerald-100 font-bold bg-emerald-800/60 px-3 py-1 rounded-full border border-emerald-400/40">
-          🎲 獨立隨機步數（1 ~ 6 步）
+        <div class="text-xs text-amber-100 font-bold bg-amber-900/60 px-3 py-1 rounded-full border border-amber-400/40">
+          🎯 點擊下方 1~6 或按鍵盤數字鍵
         </div>
       </div>
 
@@ -287,40 +246,58 @@
     <!-- 6x5 Board Grid Structure -->
     <div class="board-grid relative bg-emerald-950/10 p-3 rounded-3xl border-2 border-emerald-300 backdrop-blur-sm">
       
-      <!-- Center Interactive Stage (Cols 2-5, Rows 2-4) -->
-      <div class="col-start-2 col-end-6 row-start-2 row-end-5 bg-white/95 rounded-2xl border-4 border-dashed border-emerald-400 p-4 md:p-6 flex flex-col justify-center items-center text-center shadow-inner relative overflow-hidden">
+      <!-- Center Interactive Stage: Physical Step Input Hub -->
+      <div class="col-start-2 col-end-6 row-start-2 row-end-5 bg-white/95 rounded-2xl border-4 border-dashed border-amber-400 p-4 md:p-6 flex flex-col justify-center items-center text-center shadow-inner relative overflow-hidden">
         
         <div class="absolute inset-0 flex items-center justify-center opacity-10 pointer-events-none">
-          <span class="text-[170px] select-none">🗺️</span>
+          <span class="text-[170px] select-none">🎯</span>
         </div>
 
-        <div class="relative z-10 flex flex-col items-center max-w-lg w-full">
-          <span id="centerStatusSubtitle" class="text-sm md:text-base font-black tracking-wider px-4 py-1 bg-emerald-100 text-emerald-900 rounded-full mb-1 border border-emerald-300 shadow-sm">
-            台灣特產健康環島
+        <div class="relative z-10 flex flex-col items-center max-w-xl w-full">
+          <span id="centerStatusSubtitle" class="text-sm md:text-base font-black tracking-wider px-4 py-1 bg-amber-100 text-amber-900 rounded-full mb-1 border border-amber-300 shadow-sm">
+            長輩實體道具互動區（海綿骰子／沙包／轉盤／猜拳）
           </span>
           <h2 id="centerStatusTitle" class="text-2xl md:text-3xl font-black text-slate-800 mb-2">
-            輪到 <span id="centerCurrentTeamSpan" class="text-rose-600 underline decoration-rose-300 underline-offset-4">吉祥紅隊</span> 長輩擲骰！
+            輪到 <span id="centerCurrentTeamSpan" class="text-rose-600 underline decoration-rose-300 underline-offset-4">吉祥紅隊</span> 長輩投擲！
           </h2>
 
-          <!-- 3D Dice Display & Roll Button -->
-          <div class="flex items-center justify-center gap-6 my-2">
-            <div class="dice-scene cursor-pointer" onclick="rollDiceAction()" title="點擊擲骰">
-              <div id="diceCube" class="dice-cube hover:scale-105 transition-transform duration-150">
-                <div class="dice-face" id="diceFaceDisplay"></div>
-              </div>
-            </div>
+          <p id="actionGuideText" class="text-slate-600 text-base md:text-lg font-black mb-3">
+            請長輩在台下完成實體動作後，點擊下方對應前進步數：
+          </p>
 
-            <button id="rollDiceBtn" onclick="rollDiceAction()" class="bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 hover:from-amber-600 hover:to-orange-700 active:scale-95 text-white font-black text-2xl md:text-3xl px-8 py-4 rounded-2xl shadow-xl border-4 border-amber-200 transition-all flex items-center gap-3">
-              <span class="animate-bounce">🎲</span>
-              <span>按我擲骰子</span>
+          <!-- 1 to 6 Big Number Step Buttons -->
+          <div class="grid grid-cols-6 gap-2 md:gap-3 w-full max-w-lg mb-2">
+            <button onclick="applyPhysicalSteps(1)" class="bg-gradient-to-b from-amber-400 to-amber-500 hover:from-amber-500 hover:to-amber-600 active:scale-90 text-white font-black text-xl md:text-2xl py-3 rounded-2xl shadow-md border-2 border-amber-200 transition flex flex-col items-center justify-center">
+              <span>1</span>
+              <span class="text-xs font-extrabold opacity-90">1步</span>
+            </button>
+            <button onclick="applyPhysicalSteps(2)" class="bg-gradient-to-b from-amber-400 to-amber-500 hover:from-amber-500 hover:to-amber-600 active:scale-90 text-white font-black text-xl md:text-2xl py-3 rounded-2xl shadow-md border-2 border-amber-200 transition flex flex-col items-center justify-center">
+              <span>2</span>
+              <span class="text-xs font-extrabold opacity-90">2步</span>
+            </button>
+            <button onclick="applyPhysicalSteps(3)" class="bg-gradient-to-b from-amber-400 to-amber-500 hover:from-amber-500 hover:to-amber-600 active:scale-90 text-white font-black text-xl md:text-2xl py-3 rounded-2xl shadow-md border-2 border-amber-200 transition flex flex-col items-center justify-center">
+              <span>3</span>
+              <span class="text-xs font-extrabold opacity-90">3步</span>
+            </button>
+            <button onclick="applyPhysicalSteps(4)" class="bg-gradient-to-b from-orange-400 to-orange-500 hover:from-orange-500 hover:to-orange-600 active:scale-90 text-white font-black text-xl md:text-2xl py-3 rounded-2xl shadow-md border-2 border-orange-200 transition flex flex-col items-center justify-center">
+              <span>4</span>
+              <span class="text-xs font-extrabold opacity-90">4步</span>
+            </button>
+            <button onclick="applyPhysicalSteps(5)" class="bg-gradient-to-b from-orange-400 to-orange-500 hover:from-orange-500 hover:to-orange-600 active:scale-90 text-white font-black text-xl md:text-2xl py-3 rounded-2xl shadow-md border-2 border-orange-200 transition flex flex-col items-center justify-center">
+              <span>5</span>
+              <span class="text-xs font-extrabold opacity-90">5步</span>
+            </button>
+            <button onclick="applyPhysicalSteps(6)" class="bg-gradient-to-b from-rose-500 to-rose-600 hover:from-rose-600 hover:to-rose-700 active:scale-90 text-white font-black text-xl md:text-2xl py-3 rounded-2xl shadow-md border-2 border-rose-300 transition flex flex-col items-center justify-center">
+              <span>6</span>
+              <span class="text-xs font-extrabold opacity-90">6步</span>
             </button>
           </div>
 
-          <p id="diceTipText" class="text-slate-600 text-base md:text-lg font-black mt-2 min-h-[28px]">
-            點擊大按鈕，隨機出現 1 ~ 6 步！
-          </p>
+          <div class="flex items-center gap-3 mt-2 text-xs md:text-sm font-bold text-slate-500">
+            <span>💡 提示：支援鍵盤快捷鍵 <kbd class="px-1.5 py-0.5 bg-slate-200 rounded border">1</kbd>～<kbd class="px-1.5 py-0.5 bg-slate-200 rounded border">6</kbd>，亦可直接點選外圍任一地圖格子移動</span>
+          </div>
 
-          <div class="flex items-center gap-3 mt-3 pt-3 border-t border-slate-200">
+          <div class="flex items-center gap-3 mt-3 pt-2 border-t border-slate-200">
             <button onclick="openCurrentStationModal()" class="text-sm bg-emerald-100 hover:bg-emerald-200 text-emerald-950 font-black px-4 py-2 rounded-xl border border-emerald-300 transition flex items-center gap-1.5 shadow-sm">
               <span>📋</span>
               <span>查看當前站點挑戰題目</span>
@@ -456,7 +433,7 @@
   </div>
 
   <footer class="max-w-7xl mx-auto w-full text-center py-2 text-xs md:text-sm font-bold text-emerald-900/80 relative z-30">
-    🌟 聲光生物回饋 + 台灣民謠溫馨旋律：聽節奏、看光圈、聚光燈引導，安心運動、活力滿分！
+    🌟 實體互動模式：結合實體道具、肢體運動、台灣民謠旋律與聲光生物回饋，長輩健康活力滿分！
   </footer>
 
   <script>
@@ -507,7 +484,6 @@
         const osc = audioCtx.createOscillator();
         const noteGain = audioCtx.createGain();
 
-        // Warm, nostalgic chime tone (triangle + soft lowpass filter)
         osc.type = 'triangle';
         osc.frequency.setValueAtTime(freq, now);
 
@@ -515,7 +491,6 @@
         filter.type = 'lowpass';
         filter.frequency.setValueAtTime(1400, now);
 
-        // Gentle envelope
         noteGain.gain.setValueAtTime(0.001, now);
         noteGain.gain.linearRampToValueAtTime(0.28, now + 0.04);
         noteGain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
@@ -531,8 +506,7 @@
       }
     }
 
-    // Taiwanese Nostalgic Folk Melody: 《望春風》 (Spring Breeze) & 《四季紅》 Motifs
-    // Pentatonic, highly recognizable and soothing for Taiwanese seniors
+    // Taiwanese Nostalgic Folk Melody: 《望春風》 (Spring Breeze)
     const folkNotes = {
       G3: 196.00, A3: 220.00,
       C4: 261.63, D4: 293.66, E4: 329.63, G4: 392.00, A4: 440.00,
@@ -540,9 +514,7 @@
       REST: 0
     };
 
-    // Melody array: [frequency, duration in 16th-beat units (1 = ~160ms)]
     const taiwanFolkScore = [
-      // 《望春風》經典開頭動機
       { f: folkNotes.G4, d: 2 }, { f: folkNotes.A4, d: 2 }, { f: folkNotes.C5, d: 4 },
       { f: folkNotes.D5, d: 2 }, { f: folkNotes.C5, d: 2 }, { f: folkNotes.A4, d: 4 },
       { f: folkNotes.G4, d: 3 }, { f: folkNotes.A4, d: 1 }, { f: folkNotes.C5, d: 2 }, { f: folkNotes.A4, d: 2 },
@@ -553,13 +525,11 @@
       { f: folkNotes.D5, d: 2 }, { f: folkNotes.E5, d: 2 }, { f: folkNotes.D5, d: 2 }, { f: folkNotes.C5, d: 2 },
       { f: folkNotes.A4, d: 6 }, { f: folkNotes.REST, d: 2 },
 
-      // 中段抒情句
       { f: folkNotes.E5, d: 4 }, { f: folkNotes.D5, d: 2 }, { f: folkNotes.E5, d: 2 },
       { f: folkNotes.G5, d: 4 }, { f: folkNotes.E5, d: 4 },
       { f: folkNotes.D5, d: 3 }, { f: folkNotes.C5, d: 1 }, { f: folkNotes.A4, d: 2 }, { f: folkNotes.C5, d: 2 },
       { f: folkNotes.D5, d: 6 }, { f: folkNotes.REST, d: 2 },
 
-      // 溫馨結尾句
       { f: folkNotes.C5, d: 2 }, { f: folkNotes.D5, d: 2 }, { f: folkNotes.C5, d: 4 },
       { f: folkNotes.A4, d: 2 }, { f: folkNotes.G4, d: 2 }, { f: folkNotes.A4, d: 4 },
       { f: folkNotes.C5, d: 3 }, { f: folkNotes.D5, d: 1 }, { f: folkNotes.C5, d: 2 }, { f: folkNotes.A4, d: 2 },
@@ -570,7 +540,7 @@
       if (!bgmEnabled) return;
 
       const item = taiwanFolkScore[currentBgmNoteIndex];
-      const baseBeatTime = 165; // Milliseconds per 16th unit
+      const baseBeatTime = 165;
       const noteDurationMs = item.d * baseBeatTime;
 
       if (item.f > 0) {
@@ -631,7 +601,6 @@
       }
     }
 
-    // Play a single procedural tone with envelope
     function playTone(freq, duration, type = 'sine', gainLevel = 0.15) {
       if (!soundEnabled) return;
       try {
@@ -651,24 +620,6 @@
       }
     }
 
-    // 1. Procedural 3D Tumbling Dice Sound (Rattle & click)
-    function playDiceTick() {
-      if (!soundEnabled) return;
-      initAudio();
-      duckBgm(0.3, 0.1);
-      const osc = audioCtx.createOscillator();
-      const gain = audioCtx.createGain();
-      osc.type = 'triangle';
-      osc.frequency.setValueAtTime(260 + Math.random() * 320, audioCtx.currentTime);
-      gain.gain.setValueAtTime(0.12, audioCtx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.05);
-      osc.connect(gain);
-      gain.connect(audioCtx.destination);
-      osc.start();
-      osc.stop(audioCtx.currentTime + 0.05);
-    }
-
-    // 2. Procedural Marimba Ascending Hop Step Sound
     function playHopStep(stepIdx) {
       if (!soundEnabled) return;
       initAudio();
@@ -680,7 +631,6 @@
       const gain = audioCtx.createGain();
       osc.type = 'sine';
       osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
-      
       gain.gain.setValueAtTime(0.24, audioCtx.currentTime);
       gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.18);
       osc.connect(gain);
@@ -689,7 +639,6 @@
       osc.stop(audioCtx.currentTime + 0.18);
     }
 
-    // 3. Procedural Wind-Chime Glissando for Station Openings
     function playChimeSweep() {
       if (!soundEnabled) return;
       initAudio();
@@ -702,7 +651,6 @@
       });
     }
 
-    // 4. Procedural Temple Woodblock (Metronome Pacing Tick)
     function playWoodblock(isHigh = false) {
       if (!soundEnabled) return;
       initAudio();
@@ -719,7 +667,6 @@
       osc.stop(audioCtx.currentTime + 0.08);
     }
 
-    // 5. Procedural Pitch-Ascending Rep Chime (Biofeedback)
     function playAscendingRepNote(repCount) {
       if (!soundEnabled) return;
       initAudio();
@@ -739,7 +686,6 @@
       osc.stop(audioCtx.currentTime + 0.28);
     }
 
-    // 6. Procedural Victory Fanfare (Brass Triad + Major 7th Chord)
     function playVictoryFanfare() {
       if (!soundEnabled) return;
       initAudio();
@@ -758,7 +704,6 @@
       });
     }
 
-    // 7. Procedural Crowd Cheering & Applause Simulator
     function playCrowdCheer() {
       if (!soundEnabled) return;
       initAudio();
@@ -990,7 +935,7 @@
 
     // State
     let currentTurn = 'red'; // 'red' or 'blue'
-    let isRolling = false;
+    let isMoving = false;
     const scores = { red: 0, blue: 0 };
     const positions = { red: 0, blue: 0 }; // 0 to 17
     let currentModalStation = null;
@@ -1001,9 +946,7 @@
     let metronomePhase = 0;
     let currentStationReps = 0;
     let targetStationReps = 10;
-  </script>
 
-  <script>
     function renderBoard() {
       const container = document.querySelector('.board-grid');
       
@@ -1020,15 +963,17 @@
         const typeName = isMuscle ? '💪 肌力' : '🧠 認知';
 
         tile.className = `bg-white rounded-2xl p-2 md:p-2.5 border-2 border-slate-200 shadow-sm flex flex-col justify-between items-center text-center relative hover:shadow-md transition-all cursor-pointer`;
-        tile.onclick = () => openStationModal(station);
+        
+        // Direct click on map station
+        tile.onclick = () => handleDirectTileClick(station.id);
 
         tile.innerHTML = `
-          <div class="w-full flex items-center justify-between text-[11px] font-black">
+          <div class="w-full flex items-center justify-between text-[11px] font-black pointer-events-none">
             <span class="px-1.5 py-0.5 rounded border ${typeBadgeColor}">${typeName}</span>
             <span class="text-slate-400 font-extrabold">#${station.id + 1}</span>
           </div>
 
-          <div class="my-0.5">
+          <div class="my-0.5 pointer-events-none">
             <div class="text-2xl md:text-3xl">${station.icon}</div>
             <div class="font-black text-sm md:text-base text-slate-800 leading-tight">${station.city}</div>
             <div class="text-xs font-extrabold text-emerald-700 truncate max-w-[85px] md:max-w-[115px]">${station.food}</div>
@@ -1041,32 +986,8 @@
         container.appendChild(tile);
       });
 
-      renderDiceFace(1);
       updateTokenPositions();
       updateTurnUI();
-    }
-
-    function renderDiceFace(value) {
-      const face = document.getElementById('diceFaceDisplay');
-      face.innerHTML = '';
-
-      const pipMap = {
-        1: [{r:2, c:2, red: true}],
-        2: [{r:1, c:1}, {r:3, c:3}],
-        3: [{r:1, c:1}, {r:2, c:2}, {r:3, c:3}],
-        4: [{r:1, c:1}, {r:1, c:3}, {r:3, c:1}, {r:3, c:3}],
-        5: [{r:1, c:1}, {r:1, c:3}, {r:2, c:2}, {r:3, c:1}, {r:3, c:3}],
-        6: [{r:1, c:1}, {r:2, c:1}, {r:3, c:1}, {r:1, c:3}, {r:2, c:3}, {r:3, c:3}]
-      };
-
-      const pips = pipMap[value] || pipMap[1];
-      pips.forEach(p => {
-        const dot = document.createElement('div');
-        dot.className = `pip ${p.red ? 'pip-red' : ''}`;
-        dot.style.gridRowStart = p.r;
-        dot.style.gridColumnStart = p.c;
-        face.appendChild(dot);
-      });
     }
 
     function updateTokenPositions() {
@@ -1104,7 +1025,6 @@
         activeTile.classList.add('tile-spotlight');
       }
 
-      // Update location indicator
       document.getElementById('redLocationText').innerText = 
         `第${positions.red + 1}站 ${boardStations[positions.red].city} (${boardStations[positions.red].food})`;
       document.getElementById('blueLocationText').innerText = 
@@ -1132,7 +1052,7 @@
         blueBadge.classList.add('hidden');
 
         ambient.style.boxShadow = 'inset 0 0 75px 12px rgba(239, 68, 68, 0.25)';
-        document.getElementById('turnBanner').innerHTML = `🍎 ${redName} 請擲骰`;
+        document.getElementById('turnBanner').innerHTML = `🍎 ${redName} 準備前進`;
         document.getElementById('centerCurrentTeamSpan').innerText = redName;
         document.getElementById('centerCurrentTeamSpan').className = 'text-rose-600 underline decoration-rose-300 underline-offset-4';
       } else {
@@ -1145,7 +1065,7 @@
         redBadge.classList.add('hidden');
 
         ambient.style.boxShadow = 'inset 0 0 75px 12px rgba(14, 165, 233, 0.25)';
-        document.getElementById('turnBanner').innerHTML = `🚙 ${blueName} 請擲骰`;
+        document.getElementById('turnBanner').innerHTML = `🚙 ${blueName} 準備前進`;
         document.getElementById('centerCurrentTeamSpan').innerText = blueName;
         document.getElementById('centerCurrentTeamSpan').className = 'text-sky-600 underline decoration-sky-300 underline-offset-4';
       }
@@ -1153,72 +1073,53 @@
   </script>
 
   <script>
-    function getRandomDiceRoll() {
-      if (window.crypto && window.crypto.getRandomValues) {
-        const arr = new Uint32Array(1);
-        window.crypto.getRandomValues(arr);
-        return (arr[0] % 6) + 1;
-      }
-      return Math.floor(Math.random() * 6) + 1;
-    }
-
-    function rollDiceAction() {
-      if (isRolling) return;
-      isRolling = true;
+    // Physical Step Input Trigger (from UI buttons or keyboard 1-6)
+    function applyPhysicalSteps(steps) {
+      if (isMoving) return;
+      isMoving = true;
       initAudio();
       startBgm();
 
-      const btn = document.getElementById('rollDiceBtn');
-      btn.disabled = true;
-      btn.classList.add('opacity-50', 'cursor-not-allowed');
-
-      const cube = document.getElementById('diceCube');
-      const tip = document.getElementById('diceTipText');
       const activeTeamName = currentTurn === 'red' 
         ? (document.getElementById('redTeamName').value || '紅隊') 
         : (document.getElementById('blueTeamName').value || '藍隊');
 
-      // True independent random roll
-      const finalSteps = getRandomDiceRoll();
+      document.getElementById('actionGuideText').innerText = 
+        `✨ ${activeTeamName} 實體投擲成果：前進【 ${steps} 步 】！前進中...`;
 
-      let rollTicks = 0;
-      const totalTicks = 12;
+      stepByStepMovement(steps, 1);
+    }
 
-      const rollTimer = setInterval(() => {
-        rollTicks++;
-        playDiceTick();
+    // Direct Tile Click: jump directly to a tile
+    function handleDirectTileClick(targetStationId) {
+      if (isMoving) return;
+      initAudio();
+      startBgm();
 
-        // 3D tumble angles
-        const randX = Math.floor(Math.random() * 360);
-        const randY = Math.floor(Math.random() * 360);
-        cube.style.transform = `rotateX(${randX}deg) rotateY(${randY}deg)`;
+      const startPos = positions[currentTurn];
+      if (startPos === targetStationId) {
+        openStationModal(boardStations[targetStationId]);
+        return;
+      }
 
-        const tempFace = Math.floor(Math.random() * 6) + 1;
-        renderDiceFace(tempFace);
-        tip.innerText = `🎲 ${activeTeamName} 骰子旋轉中...`;
+      // Calculate forward distance
+      let diff = targetStationId - startPos;
+      if (diff < 0) diff += boardStations.length;
 
-        if (rollTicks >= totalTicks) {
-          clearInterval(rollTimer);
-          cube.style.transform = `rotateX(0deg) rotateY(0deg)`;
-          renderDiceFace(finalSteps);
+      isMoving = true;
+      const activeTeamName = currentTurn === 'red' 
+        ? (document.getElementById('redTeamName').value || '紅隊') 
+        : (document.getElementById('blueTeamName').value || '藍隊');
 
-          tip.innerText = `✨ ${activeTeamName} 擲出了【 ${finalSteps} 點 】！出發！`;
-          playTone(560, 0.2, 'triangle');
+      document.getElementById('actionGuideText').innerText = 
+        `📍 手動點選直達【${boardStations[targetStationId].city}】，前進 ${diff} 步！`;
 
-          setTimeout(() => {
-            stepByStepMovement(finalSteps, 1);
-          }, 450);
-        }
-      }, 90);
+      stepByStepMovement(diff, 1);
     }
 
     function stepByStepMovement(remainingSteps, currentStepCount) {
       if (remainingSteps <= 0) {
-        isRolling = false;
-        const btn = document.getElementById('rollDiceBtn');
-        btn.disabled = false;
-        btn.classList.remove('opacity-50', 'cursor-not-allowed');
-
+        isMoving = false;
         const activeIndex = positions[currentTurn];
         currentModalStation = boardStations[activeIndex];
 
@@ -1233,7 +1134,6 @@
       playHopStep(currentStepCount);
       updateTokenPositions();
 
-      // Hop bounce on active tile
       const targetTile = document.getElementById(`station-${positions[currentTurn]}`);
       if (targetTile) {
         targetTile.classList.add('tile-hop-bounce');
@@ -1245,13 +1145,23 @@
       }, 350);
     }
 
+    // Keyboard Shortcuts (1~6 on number row or numpad)
+    window.addEventListener('keydown', (e) => {
+      // Do not trigger if user is typing a team name
+      if (e.target.tagName === 'INPUT') return;
+
+      const num = parseInt(e.key, 10);
+      if (num >= 1 && num <= 6) {
+        applyPhysicalSteps(num);
+      }
+    });
+
     function openStationModal(station) {
       currentModalStation = station;
       initAudio();
       startBgm();
       playChimeSweep();
 
-      // Reset biofeedback counter
       currentStationReps = 0;
       targetStationReps = station.reps || 10;
       document.getElementById('currentRepsBadge').innerText = '0';
@@ -1288,7 +1198,6 @@
       document.getElementById('taskCityTitle').innerText = `${station.city}・${station.food}`;
       document.getElementById('taskQuestionText').innerText = station.task;
 
-      // Reset metronome state
       stopMetronome();
 
       modal.classList.remove('hidden');
@@ -1322,10 +1231,6 @@
       btn.innerText = '⏹ 暫停節奏';
       btn.className = 'text-xs font-black bg-rose-600 hover:bg-rose-700 text-white px-3 py-1 rounded-full shadow-sm transition';
 
-      const orb = document.getElementById('breathingOrb');
-      const status = document.getElementById('metroTextStatus');
-      const guide = document.getElementById('metroPacingGuide');
-
       metronomePhase = 0;
       runMetronomeStep();
       metronomeTimer = setInterval(runMetronomeStep, 1300);
@@ -1336,7 +1241,6 @@
       const status = document.getElementById('metroTextStatus');
       const guide = document.getElementById('metroPacingGuide');
 
-      // 2-step breathing loop: Expand (exhale/push) vs Relax (inhale/return)
       if (metronomePhase % 2 === 0) {
         orb.className = 'breathing-orb expand flex items-center justify-center text-white font-black text-sm';
         status.innerText = '用力';
@@ -1383,13 +1287,9 @@
       badge.classList.add('scale-125');
       setTimeout(() => badge.classList.remove('scale-125'), 180);
 
-      // Play ascending pentatonic chime
       playAscendingRepNote(currentStationReps);
-
-      // Visual Ripple shockwave
       createShockwave(event);
 
-      // Flash ambient edge glow golden
       const ambient = document.getElementById('ambientGlowOverlay');
       ambient.style.boxShadow = 'inset 0 0 100px 25px rgba(245, 158, 11, 0.6)';
       setTimeout(() => {
@@ -1399,7 +1299,6 @@
           : 'inset 0 0 75px 12px rgba(14, 165, 233, 0.25)';
       }, 400);
 
-      // Reached Target: Big sensory celebration!
       if (currentStationReps >= targetStationReps) {
         document.getElementById('repFeedbackTip').innerHTML = 
           '🎉 <span class="text-emerald-700 font-black text-sm">太棒了！已達成目標次數！</span>';
@@ -1490,8 +1389,9 @@
 
       document.getElementById('centerStatusSubtitle').innerText = '回合交棒';
       document.getElementById('centerStatusTitle').innerHTML = 
-        `換 <span class="${currentTurn === 'red' ? 'text-rose-600' : 'text-sky-600'} underline">${teamName}</span> 長輩擲骰！`;
-      document.getElementById('diceTipText').innerText = `請 ${teamName} 的長輩代表點擊「按我擲骰子」！`;
+        `換 <span class="${currentTurn === 'red' ? 'text-rose-600' : 'text-sky-600'} underline">${teamName}</span> 長輩投擲！`;
+      document.getElementById('actionGuideText').innerText = 
+        `請長輩完成實體動作後，點擊對應步數（1~6）！`;
     }
 
     function triggerFullApplause() {
@@ -1521,14 +1421,13 @@
       positions.red = 0;
       positions.blue = 0;
       currentTurn = 'red';
-      isRolling = false;
+      isMoving = false;
 
       document.getElementById('redScore').innerText = '0';
       document.getElementById('blueScore').innerText = '0';
-      document.getElementById('diceTipText').innerText = '點擊大按鈕，隨機出現 1 ~ 6 步！';
+      document.getElementById('actionGuideText').innerText = '請長輩在台下完成實體動作後，點擊下方對應前進步數：';
       
       closeTaskModal();
-      renderDiceFace(1);
       updateTokenPositions();
       updateTurnUI();
     }
@@ -1547,7 +1446,6 @@
 
     window.addEventListener('DOMContentLoaded', () => {
       renderBoard();
-      // Browser autoplay policy handler: starts audio on first user touch/click anywhere
       const triggerAudioStart = () => {
         initAudio();
         startBgm();
