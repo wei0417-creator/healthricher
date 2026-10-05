@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>台灣寶島名產・健康大富翁（銀髮樂齡版）</title>
+  <title>台灣寶島名產・健康大富翁（聲光生物回饋 + 台灣民謠音樂版）</title>
   <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
   <!-- Canvas Confetti CDN -->
@@ -11,7 +11,7 @@
 
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@600;800;900&display=swap');
-    
+
     * {
       box-sizing: border-box;
       user-select: none;
@@ -20,14 +20,26 @@
 
     body {
       font-family: 'Noto Sans TC', sans-serif;
-      background: linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 40%, #eff6ff 100%);
+      background: radial-gradient(circle at 50% 30%, #f0fdf4 0%, #ecfdf5 55%, #e0f2fe 100%);
       overflow-x: hidden;
+      min-height: 100vh;
+      transition: box-shadow 0.4s ease;
     }
 
-    /* 3D Interactive Dice */
+    /* Ambient Screen Edge Glow (Biofeedback Light Frame) */
+    #ambientGlowOverlay {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 40;
+      box-shadow: inset 0 0 70px 10px rgba(239, 68, 68, 0.22);
+      transition: box-shadow 0.5s ease;
+    }
+
+    /* 3D Interactive Tumbling Dice */
     .dice-scene {
-      width: 86px;
-      height: 86px;
+      width: 90px;
+      height: 90px;
       perspective: 600px;
     }
     .dice-cube {
@@ -39,30 +51,30 @@
     }
     .dice-face {
       position: absolute;
-      width: 86px;
-      height: 86px;
+      width: 90px;
+      height: 90px;
       background: #ffffff;
       border: 4px solid #059669;
-      border-radius: 18px;
+      border-radius: 20px;
       display: grid;
       padding: 10px;
-      box-shadow: inset 0 0 10px rgba(0,0,0,0.08), 0 8px 20px rgba(0,0,0,0.18);
+      box-shadow: inset 0 0 12px rgba(0,0,0,0.08), 0 10px 25px rgba(5, 150, 105, 0.25);
       grid-template-columns: repeat(3, 1fr);
       grid-template-rows: repeat(3, 1fr);
       align-items: center;
       justify-items: center;
     }
     .pip {
-      width: 15px;
-      height: 15px;
+      width: 16px;
+      height: 16px;
       background-color: #1e293b;
       border-radius: 50%;
-      box-shadow: inset 0 1px 3px rgba(0,0,0,0.4);
+      box-shadow: inset 0 2px 4px rgba(0,0,0,0.4);
     }
     .pip-red {
       background-color: #dc2626 !important;
-      width: 26px;
-      height: 26px;
+      width: 28px;
+      height: 28px;
     }
 
     /* 6x5 Board Grid Layout */
@@ -73,75 +85,152 @@
       gap: 10px;
     }
 
-    /* Active landing tile highlight */
-    .tile-highlight {
-      animation: tilePulse 1.3s infinite alternate ease-in-out;
+    /* Stepping Spotlight & Tile Landing Animations */
+    .tile-spotlight {
+      animation: spotlightPulse 1.2s infinite alternate ease-in-out;
       border-color: #f59e0b !important;
       background-color: #fef3c7 !important;
-      transform: scale(1.03);
+      transform: scale(1.04);
       z-index: 10;
     }
-    @keyframes tilePulse {
-      0% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.7); }
-      100% { box-shadow: 0 0 0 14px rgba(245, 158, 11, 0); }
+    @keyframes spotlightPulse {
+      0% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.8), inset 0 0 15px rgba(245, 158, 11, 0.3); }
+      100% { box-shadow: 0 0 0 18px rgba(245, 158, 11, 0), inset 0 0 25px rgba(245, 158, 11, 0.5); }
     }
 
-    /* Floating token piece */
-    .token-floating {
-      animation: tokenHop 1.1s ease-in-out infinite alternate;
+    .tile-hop-bounce {
+      animation: hopBounce 0.35s ease-out;
     }
-    @keyframes tokenHop {
-      0% { transform: translateY(0px) scale(1); }
-      100% { transform: translateY(-5px) scale(1.1); }
+    @keyframes hopBounce {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.12) translateY(-8px); }
+      100% { transform: scale(1); }
+    }
+
+    /* Breathing Metronome Orb */
+    .breathing-orb {
+      width: 72px;
+      height: 72px;
+      border-radius: 50%;
+      background: radial-gradient(circle at 35% 35%, #6ee7b7, #059669);
+      box-shadow: 0 0 25px rgba(16, 185, 129, 0.6);
+      transition: transform 1.2s ease-in-out, box-shadow 1.2s ease-in-out;
+    }
+    .breathing-orb.expand {
+      transform: scale(1.35);
+      box-shadow: 0 0 45px rgba(16, 185, 129, 0.95);
+      background: radial-gradient(circle at 35% 35%, #a7f3d0, #10b981);
+    }
+    .breathing-orb.contract {
+      transform: scale(0.9);
+      box-shadow: 0 0 15px rgba(16, 185, 129, 0.3);
+      background: radial-gradient(circle at 35% 35%, #34d399, #047857);
+    }
+
+    /* Rep Counter Ripple Shockwave */
+    .ripple-effect {
+      position: absolute;
+      border-radius: 50%;
+      border: 3px solid rgba(245, 158, 11, 0.8);
+      animation: rippleAnim 0.75s ease-out forwards;
+      pointer-events: none;
+    }
+    @keyframes rippleAnim {
+      0% { width: 0; height: 0; opacity: 1; transform: translate(-50%, -50%); }
+      100% { width: 380px; height: 380px; opacity: 0; transform: translate(-50%, -50%); }
+    }
+
+    /* Score Pop Animation */
+    .score-pop {
+      animation: scorePopAnim 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+    @keyframes scorePopAnim {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.4) translateY(-6px); color: #f59e0b; text-shadow: 0 0 20px rgba(245,158,11,0.6); }
+      100% { transform: scale(1); }
+    }
+
+    /* Music Note Float Animation */
+    @keyframes noteFloat {
+      0% { transform: translateY(0px) rotate(0deg); opacity: 0.8; }
+      50% { transform: translateY(-4px) rotate(8deg); opacity: 1; }
+      100% { transform: translateY(0px) rotate(0deg); opacity: 0.8; }
+    }
+    .note-active {
+      display: inline-block;
+      animation: noteFloat 1.2s ease-in-out infinite;
     }
   </style>
 </head>
-<body class="min-h-screen text-slate-800 flex flex-col justify-between p-2 md:p-4">
+<body class="flex flex-col justify-between p-2 md:p-4 relative">
+
+  <!-- Ambient Biofeedback Edge Glow -->
+  <div id="ambientGlowOverlay"></div>
 
   <!-- Top Navigation & Controls -->
-  <header class="max-w-7xl mx-auto w-full flex flex-wrap items-center justify-between gap-3 bg-white/95 backdrop-blur-md px-5 py-3 rounded-2xl shadow-sm border border-emerald-200 mb-2">
+  <header class="max-w-7xl mx-auto w-full flex flex-wrap items-center justify-between gap-3 bg-white/95 backdrop-blur-md px-5 py-3 rounded-2xl shadow-sm border border-emerald-200 mb-2 relative z-30">
     <div class="flex items-center gap-3">
-      <span class="text-4xl md:text-5xl">🏝️</span>
+      <span class="text-4xl md:text-5xl drop-shadow">🏝️</span>
       <div>
         <h1 class="text-2xl md:text-3xl font-black text-emerald-950 tracking-wide flex items-center gap-2">
           台灣寶島名產・健康大富翁
+          <span class="text-xs bg-emerald-600 text-white font-extrabold px-2.5 py-0.5 rounded-full shadow-sm">民謠音樂版</span>
         </h1>
-        <p class="text-sm md:text-base font-bold text-emerald-700">全台18站美食環島・肌力動一動・認知動動腦</p>
+        <p class="text-sm md:text-base font-bold text-emerald-700">18站名產環島・台灣民謠溫馨旋律・聲光生物回饋</p>
       </div>
     </div>
 
-    <!-- Quick Utilities -->
-    <div class="flex items-center gap-2 md:gap-3">
-      <button id="soundToggleBtn" onclick="toggleSound()" class="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-800 font-black border border-emerald-200 transition text-sm md:text-base">
-        <span id="soundIcon">🔊</span>
+    <!-- Quick Tool Buttons & BGM Controls -->
+    <div class="flex items-center gap-2 md:gap-3 flex-wrap">
+      
+      <!-- BGM Toggle & Volume Control Hub -->
+      <div class="flex items-center gap-2 bg-amber-50/90 border-2 border-amber-300 px-3 py-1.5 rounded-xl shadow-sm">
+        <button id="bgmToggleBtn" onclick="toggleBgm()" class="flex items-center gap-1.5 font-black text-amber-900 text-sm md:text-base hover:text-amber-700 transition" title="開關台灣經典民謠背景音樂">
+          <span id="bgmIcon" class="note-active">🎵</span>
+          <span id="bgmText">民謠音樂：開</span>
+        </button>
+        <span class="text-amber-300">|</span>
+        <div class="flex items-center gap-1" title="調節背景音樂大小">
+          <span class="text-xs text-amber-800">🔈</span>
+          <input type="range" id="bgmVolumeSlider" min="0" max="1" step="0.05" value="0.35" oninput="adjustBgmVolume(this.value)" class="w-16 md:w-20 h-1.5 accent-amber-600 cursor-pointer">
+          <span class="text-xs text-amber-800">🔊</span>
+        </div>
+      </div>
+
+      <!-- Sound FX Toggle -->
+      <button id="soundToggleBtn" onclick="toggleSound()" class="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-800 font-black border border-emerald-200 transition text-sm md:text-base shadow-sm">
+        <span id="soundIcon">🔔</span>
         <span id="soundText">音效開</span>
       </button>
 
-      <button onclick="triggerCheer()" class="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-800 font-black border border-amber-200 transition text-sm md:text-base">
+      <!-- Applause Button -->
+      <button onclick="triggerFullApplause()" class="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-orange-50 hover:bg-orange-100 text-orange-800 font-black border border-orange-200 transition text-sm md:text-base shadow-sm">
         <span>👏</span>
-        <span>掌聲鼓勵</span>
+        <span>掌聲歡呼</span>
       </button>
 
-      <button onclick="resetGame()" class="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-black border border-slate-300 transition text-sm md:text-base">
+      <!-- Reset Button -->
+      <button onclick="resetGame()" class="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-black border border-slate-300 transition text-sm md:text-base shadow-sm">
         <span>🔄</span>
         <span>重置遊戲</span>
       </button>
 
-      <button onclick="toggleFullScreen()" class="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-blue-50 hover:bg-blue-100 text-blue-800 font-black border border-blue-200 transition text-sm md:text-base">
+      <!-- Fullscreen Button -->
+      <button onclick="toggleFullScreen()" class="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-blue-50 hover:bg-blue-100 text-blue-800 font-black border border-blue-200 transition text-sm md:text-base shadow-sm">
         <span>⛶</span>
-        <span>全螢幕</span>
+        <span>全螢幕投影</span>
       </button>
     </div>
   </header>
 
-  <main class="max-w-7xl mx-auto w-full flex-grow flex flex-col gap-3">
+  <main class="max-w-7xl mx-auto w-full flex-grow flex flex-col gap-3 relative z-30">
     <!-- Scoreboard & Current Turn Dashboard -->
     <div class="grid grid-cols-1 md:grid-cols-12 gap-3 items-center">
       
       <!-- Red Team -->
-      <div id="redTeamCard" class="md:col-span-4 bg-white rounded-2xl p-4 border-4 border-rose-500 shadow-md flex items-center justify-between transition-all duration-300 scale-[1.02] bg-rose-50/60">
+      <div id="redTeamCard" class="md:col-span-4 bg-white rounded-2xl p-4 border-4 border-rose-500 shadow-md flex items-center justify-between transition-all duration-300 scale-[1.02] bg-rose-50/70">
         <div class="flex items-center gap-3">
-          <div class="w-14 h-14 rounded-2xl bg-rose-500 text-white flex items-center justify-center text-3xl font-black shadow-inner">
+          <div class="w-14 h-14 rounded-2xl bg-rose-500 text-white flex items-center justify-center text-3xl font-black shadow-inner shadow-rose-700/40">
             🍎
           </div>
           <div>
@@ -154,28 +243,28 @@
         </div>
         <div class="text-right">
           <span class="text-xs font-black text-slate-400 block">團隊總分</span>
-          <span id="redScore" class="text-3xl md:text-4xl font-black text-rose-600">0</span>
+          <span id="redScore" class="text-3xl md:text-4xl font-black text-rose-600 inline-block transition-transform">0</span>
           <span class="text-sm font-extrabold text-slate-500">分</span>
         </div>
       </div>
 
-      <!-- Turn & Randomness Banner -->
-      <div class="md:col-span-4 bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-700 rounded-2xl p-3 md:p-4 text-white shadow-lg text-center flex flex-row md:flex-col justify-around items-center gap-1">
+      <!-- Turn & Randomness Indicator Banner -->
+      <div class="md:col-span-4 bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-700 rounded-2xl p-3 md:p-4 text-white shadow-lg text-center flex flex-row md:flex-col justify-around items-center gap-1 border-2 border-emerald-400">
         <div>
-          <span class="text-xs uppercase tracking-wider font-extrabold text-emerald-200 block">兩隊輪流・獨立隨機骰子</span>
-          <div id="turnBanner" class="text-2xl md:text-3xl font-black text-yellow-300 tracking-wide">
+          <span class="text-xs uppercase tracking-wider font-extrabold text-emerald-200 block">兩隊輪流・獨立真隨機擲骰</span>
+          <div id="turnBanner" class="text-2xl md:text-3xl font-black text-yellow-300 tracking-wide drop-shadow">
             🍎 吉祥紅隊 請擲骰
           </div>
         </div>
-        <div class="text-xs text-emerald-100 font-bold bg-emerald-800/50 px-3 py-1 rounded-full border border-emerald-400/40">
-          🎲 步數完全隨機（1 ~ 6 步）
+        <div class="text-xs text-emerald-100 font-bold bg-emerald-800/60 px-3 py-1 rounded-full border border-emerald-400/40">
+          🎲 獨立隨機步數（1 ~ 6 步）
         </div>
       </div>
 
       <!-- Blue Team -->
       <div id="blueTeamCard" class="md:col-span-4 bg-white rounded-2xl p-4 border-4 border-slate-200 shadow-md flex items-center justify-between transition-all duration-300">
         <div class="flex items-center gap-3">
-          <div class="w-14 h-14 rounded-2xl bg-sky-500 text-white flex items-center justify-center text-3xl font-black shadow-inner">
+          <div class="w-14 h-14 rounded-2xl bg-sky-500 text-white flex items-center justify-center text-3xl font-black shadow-inner shadow-sky-700/40">
             🚙
           </div>
           <div>
@@ -188,15 +277,15 @@
         </div>
         <div class="text-right">
           <span class="text-xs font-black text-slate-400 block">團隊總分</span>
-          <span id="blueScore" class="text-3xl md:text-4xl font-black text-sky-600">0</span>
+          <span id="blueScore" class="text-3xl md:text-4xl font-black text-sky-600 inline-block transition-transform">0</span>
           <span class="text-sm font-extrabold text-slate-500">分</span>
         </div>
       </div>
 
     </div>
 
-    <!-- 6x5 Board Grid -->
-    <div class="board-grid relative bg-emerald-950/10 p-3 rounded-3xl border-2 border-emerald-300">
+    <!-- 6x5 Board Grid Structure -->
+    <div class="board-grid relative bg-emerald-950/10 p-3 rounded-3xl border-2 border-emerald-300 backdrop-blur-sm">
       
       <!-- Center Interactive Stage (Cols 2-5, Rows 2-4) -->
       <div class="col-start-2 col-end-6 row-start-2 row-end-5 bg-white/95 rounded-2xl border-4 border-dashed border-emerald-400 p-4 md:p-6 flex flex-col justify-center items-center text-center shadow-inner relative overflow-hidden">
@@ -207,7 +296,7 @@
 
         <div class="relative z-10 flex flex-col items-center max-w-lg w-full">
           <span id="centerStatusSubtitle" class="text-sm md:text-base font-black tracking-wider px-4 py-1 bg-emerald-100 text-emerald-900 rounded-full mb-1 border border-emerald-300 shadow-sm">
-            台灣名產健康環島
+            台灣特產健康環島
           </span>
           <h2 id="centerStatusTitle" class="text-2xl md:text-3xl font-black text-slate-800 mb-2">
             輪到 <span id="centerCurrentTeamSpan" class="text-rose-600 underline decoration-rose-300 underline-offset-4">吉祥紅隊</span> 長輩擲骰！
@@ -228,31 +317,31 @@
           </div>
 
           <p id="diceTipText" class="text-slate-600 text-base md:text-lg font-black mt-2 min-h-[28px]">
-            點擊擲骰子，隨機出現 1 ~ 6 步！
+            點擊大按鈕，隨機出現 1 ~ 6 步！
           </p>
 
           <div class="flex items-center gap-3 mt-3 pt-3 border-t border-slate-200">
             <button onclick="openCurrentStationModal()" class="text-sm bg-emerald-100 hover:bg-emerald-200 text-emerald-950 font-black px-4 py-2 rounded-xl border border-emerald-300 transition flex items-center gap-1.5 shadow-sm">
               <span>📋</span>
-              <span>查看當前站點任務題目</span>
+              <span>查看當前站點挑戰題目</span>
             </button>
           </div>
         </div>
 
       </div>
 
-      <!-- 18 Tiles will be inserted dynamically -->
+      <!-- 18 Tiles will be inserted via JS -->
     </div>
   </main>
 
-  <!-- Direct Task Modal (Keeps concrete questions, strictly removed all teacher hints) -->
-  <div id="taskModal" class="fixed inset-0 bg-slate-900/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-3 md:p-6 transition-opacity">
-    <div class="bg-white w-full max-w-3xl rounded-3xl shadow-2xl border-4 border-emerald-400 overflow-hidden transform scale-95 transition-transform duration-200" id="taskModalContent">
+  <!-- Direct Task Modal (Enhanced with Biofeedback Sensory Metronome & Rep Shockwaves) -->
+  <div id="taskModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 hidden flex items-center justify-center p-3 md:p-6 transition-opacity">
+    <div class="bg-white w-full max-w-4xl rounded-3xl shadow-2xl border-4 border-emerald-400 overflow-hidden transform scale-95 transition-transform duration-200" id="taskModalContent">
       
       <!-- Modal Header (Type, City & Specialty) -->
-      <div id="taskHeaderBg" class="p-6 md:p-8 text-white flex items-center justify-between bg-gradient-to-r from-amber-500 to-orange-600">
+      <div id="taskHeaderBg" class="p-5 md:p-7 text-white flex items-center justify-between bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600">
         <div class="flex items-center gap-4">
-          <span id="taskTypeIcon" class="text-5xl md:text-6xl">💪</span>
+          <span id="taskTypeIcon" class="text-5xl md:text-6xl drop-shadow">💪</span>
           <div>
             <div class="flex items-center gap-2">
               <span id="taskTypeBadge" class="bg-white/20 text-white font-black text-base md:text-lg px-4 py-1 rounded-full uppercase tracking-wider backdrop-blur-sm border border-white/30">
@@ -262,32 +351,88 @@
                 紅隊挑戰中
               </span>
             </div>
-            <h3 id="taskCityTitle" class="text-3xl md:text-4xl font-black mt-2 tracking-wide">
+            <h3 id="taskCityTitle" class="text-2xl md:text-4xl font-black mt-2 tracking-wide">
               基隆市・廟口鼎邊趖
             </h3>
           </div>
         </div>
-        <div class="text-6xl opacity-30 select-none" id="taskHeaderEmoji">🥣</div>
+        <div class="text-6xl opacity-40 select-none" id="taskHeaderEmoji">🥣</div>
       </div>
 
-      <!-- Modal Body (Pure question only, large clear typography) -->
-      <div class="p-6 md:p-10 space-y-6 text-center">
+      <!-- Modal Body (Pure question + Biofeedback controls) -->
+      <div class="p-5 md:p-8 space-y-5">
         
-        <div class="bg-emerald-50/70 border-3 border-dashed border-emerald-300 rounded-3xl p-6 md:p-8 shadow-inner">
-          <div class="text-emerald-800 text-sm md:text-base font-black tracking-wider uppercase mb-2">
+        <!-- Big Pure Question Box -->
+        <div class="bg-emerald-50/70 border-3 border-dashed border-emerald-300 rounded-2xl p-5 md:p-6 shadow-inner text-center">
+          <div class="text-emerald-800 text-xs md:text-sm font-black tracking-wider uppercase mb-1">
             🎯 挑戰題目
           </div>
-          <!-- Pure Question Text: Extra Large & High Contrast -->
           <div id="taskQuestionText" class="text-2xl md:text-3xl font-black text-slate-800 leading-snug">
             雙手握拳向前推 10 下，像在推大蒸籠！
           </div>
         </div>
 
-        <!-- Action / Scoring Panel -->
+        <!-- Biofeedback Multi-Sensory Hub (Metronome & Rep Shockwave Counter) -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          
+          <!-- Biofeedback Tool 1: Rhythmic Breathing & Movement Metronome -->
+          <div class="bg-slate-50 border-2 border-emerald-200 rounded-2xl p-4 flex flex-col items-center justify-between text-center relative overflow-hidden shadow-sm">
+            <div class="w-full flex items-center justify-between mb-2">
+              <span class="text-xs font-black text-emerald-800 uppercase tracking-wider flex items-center gap-1">
+                <span>🧘</span>
+                <span>動作節奏律動光圈</span>
+              </span>
+              <button id="metroToggleBtn" onclick="toggleMetronome()" class="text-xs font-black bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1 rounded-full shadow-sm transition">
+                ▶ 開啟節奏引導
+              </button>
+            </div>
+
+            <!-- Visual Breathing Orb -->
+            <div class="my-2 flex flex-col items-center justify-center">
+              <div id="breathingOrb" class="breathing-orb flex items-center justify-center text-white font-black text-sm">
+                <span id="metroTextStatus">預備</span>
+              </div>
+              <p id="metroPacingGuide" class="text-sm font-black text-emerald-900 mt-3">
+                跟隨光圈大小均勻呼吸與動作
+              </p>
+            </div>
+
+            <span class="text-[11px] font-bold text-slate-400">雙音節拍聲・光圈放大用力／縮小放鬆</span>
+          </div>
+
+          <!-- Biofeedback Tool 2: Progressive Sensory Rep Counter -->
+          <div class="bg-amber-50/60 border-2 border-amber-300 rounded-2xl p-4 flex flex-col items-center justify-between text-center relative overflow-hidden shadow-sm">
+            <div class="w-full flex items-center justify-between mb-1">
+              <span class="text-xs font-black text-amber-900 uppercase tracking-wider flex items-center gap-1">
+                <span>⚡</span>
+                <span>長輩動作動態累計 (聲光回饋)</span>
+              </span>
+              <span class="text-xs font-extrabold text-amber-700">
+                目標：<span id="targetRepsSpan" class="font-black text-amber-900">10</span> 次
+              </span>
+            </div>
+
+            <!-- Big Rep Trigger Button with Ripple -->
+            <div class="relative my-2">
+              <button id="repTriggerBtn" onclick="triggerRepAction(event)" class="relative z-10 bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 active:scale-95 text-white font-black text-xl md:text-2xl px-6 py-4 rounded-2xl shadow-lg border-2 border-amber-200 transition-all flex items-center gap-3">
+                <span>👏 做一下 / 答對了！</span>
+                <span id="currentRepsBadge" class="bg-white text-orange-600 text-xl font-black px-3 py-1 rounded-xl shadow-inner">0</span>
+              </button>
+              <div id="rippleContainer" class="absolute inset-0 pointer-events-none overflow-visible"></div>
+            </div>
+
+            <p id="repFeedbackTip" class="text-xs font-black text-amber-800">
+              每按一下音階漸升並伴隨彩虹波紋，達標即爆發勝利號角！
+            </p>
+          </div>
+
+        </div>
+
+        <!-- Instructor Score Controls -->
         <div class="bg-slate-50 border border-slate-200 rounded-2xl p-4 flex flex-wrap items-center justify-between gap-3">
           <span class="text-base font-extrabold text-slate-700 flex items-center gap-1.5">
             <span>🎖️</span>
-            <span>評分給獎：</span>
+            <span>評分結算：</span>
           </span>
           <div class="flex flex-wrap items-center gap-2">
             <button onclick="awardScore(10)" class="bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white font-black text-lg px-6 py-2.5 rounded-xl shadow transition">
@@ -310,25 +455,183 @@
     </div>
   </div>
 
-  <footer class="max-w-7xl mx-auto w-full text-center py-2 text-xs md:text-sm font-bold text-emerald-900/80">
-    🌟 20位長輩一同參與：全班坐姿一起做動作，活力滿滿、安全第一！
+  <footer class="max-w-7xl mx-auto w-full text-center py-2 text-xs md:text-sm font-bold text-emerald-900/80 relative z-30">
+    🌟 聲光生物回饋 + 台灣民謠溫馨旋律：聽節奏、看光圈、聚光燈引導，安心運動、活力滿分！
   </footer>
 
   <script>
-    // Pure Web Audio API Synthesizer (No external sound files required)
+    // Procedural Web Audio API Engine
     const AudioContext = window.AudioContext || window.webkitAudioContext;
     let audioCtx = null;
     let soundEnabled = true;
+    let bgmEnabled = true;
+    let bgmMasterVolume = 0.35;
+
+    // Node references for dynamic ducking and BGM
+    let bgmGainNode = null;
+    let bgmTimer = null;
+    let currentBgmNoteIndex = 0;
 
     function initAudio() {
       if (!audioCtx) {
         audioCtx = new AudioContext();
+        bgmGainNode = audioCtx.createGain();
+        bgmGainNode.gain.setValueAtTime(bgmEnabled ? bgmMasterVolume : 0, audioCtx.currentTime);
+        bgmGainNode.connect(audioCtx.destination);
       }
       if (audioCtx.state === 'suspended') {
         audioCtx.resume();
       }
     }
 
+    // Audio Ducking: dynamically lowers BGM when game sound effects play
+    function duckBgm(duration = 1.0, duckLevel = 0.08) {
+      if (!bgmGainNode || !audioCtx || !bgmEnabled) return;
+      try {
+        const now = audioCtx.currentTime;
+        bgmGainNode.gain.cancelScheduledValues(now);
+        bgmGainNode.gain.setValueAtTime(bgmGainNode.gain.value, now);
+        bgmGainNode.gain.linearRampToValueAtTime(duckLevel * bgmMasterVolume, now + 0.1);
+        bgmGainNode.gain.setValueAtTime(duckLevel * bgmMasterVolume, now + duration);
+        bgmGainNode.gain.linearRampToValueAtTime(bgmMasterVolume, now + duration + 0.4);
+      } catch (e) {
+        console.warn(e);
+      }
+    }
+
+    // Gentle Marimba / Music Box Procedural Note for BGM
+    function playBgmNote(freq, duration = 0.35) {
+      if (!bgmEnabled || !audioCtx || !bgmGainNode) return;
+      try {
+        const now = audioCtx.currentTime;
+        const osc = audioCtx.createOscillator();
+        const noteGain = audioCtx.createGain();
+
+        // Warm, nostalgic chime tone (triangle + soft lowpass filter)
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(freq, now);
+
+        const filter = audioCtx.createBiquadFilter();
+        filter.type = 'lowpass';
+        filter.frequency.setValueAtTime(1400, now);
+
+        // Gentle envelope
+        noteGain.gain.setValueAtTime(0.001, now);
+        noteGain.gain.linearRampToValueAtTime(0.28, now + 0.04);
+        noteGain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
+
+        osc.connect(filter);
+        filter.connect(noteGain);
+        noteGain.connect(bgmGainNode);
+
+        osc.start(now);
+        osc.stop(now + duration);
+      } catch (e) {
+        console.warn(e);
+      }
+    }
+
+    // Taiwanese Nostalgic Folk Melody: 《望春風》 (Spring Breeze) & 《四季紅》 Motifs
+    // Pentatonic, highly recognizable and soothing for Taiwanese seniors
+    const folkNotes = {
+      G3: 196.00, A3: 220.00,
+      C4: 261.63, D4: 293.66, E4: 329.63, G4: 392.00, A4: 440.00,
+      C5: 523.25, D5: 587.33, E5: 659.25, G5: 783.99, A5: 880.00,
+      REST: 0
+    };
+
+    // Melody array: [frequency, duration in 16th-beat units (1 = ~160ms)]
+    const taiwanFolkScore = [
+      // 《望春風》經典開頭動機
+      { f: folkNotes.G4, d: 2 }, { f: folkNotes.A4, d: 2 }, { f: folkNotes.C5, d: 4 },
+      { f: folkNotes.D5, d: 2 }, { f: folkNotes.C5, d: 2 }, { f: folkNotes.A4, d: 4 },
+      { f: folkNotes.G4, d: 3 }, { f: folkNotes.A4, d: 1 }, { f: folkNotes.C5, d: 2 }, { f: folkNotes.A4, d: 2 },
+      { f: folkNotes.G4, d: 6 }, { f: folkNotes.REST, d: 2 },
+
+      { f: folkNotes.A4, d: 2 }, { f: folkNotes.C5, d: 2 }, { f: folkNotes.D5, d: 4 },
+      { f: folkNotes.E5, d: 3 }, { f: folkNotes.D5, d: 1 }, { f: folkNotes.C5, d: 4 },
+      { f: folkNotes.D5, d: 2 }, { f: folkNotes.E5, d: 2 }, { f: folkNotes.D5, d: 2 }, { f: folkNotes.C5, d: 2 },
+      { f: folkNotes.A4, d: 6 }, { f: folkNotes.REST, d: 2 },
+
+      // 中段抒情句
+      { f: folkNotes.E5, d: 4 }, { f: folkNotes.D5, d: 2 }, { f: folkNotes.E5, d: 2 },
+      { f: folkNotes.G5, d: 4 }, { f: folkNotes.E5, d: 4 },
+      { f: folkNotes.D5, d: 3 }, { f: folkNotes.C5, d: 1 }, { f: folkNotes.A4, d: 2 }, { f: folkNotes.C5, d: 2 },
+      { f: folkNotes.D5, d: 6 }, { f: folkNotes.REST, d: 2 },
+
+      // 溫馨結尾句
+      { f: folkNotes.C5, d: 2 }, { f: folkNotes.D5, d: 2 }, { f: folkNotes.C5, d: 4 },
+      { f: folkNotes.A4, d: 2 }, { f: folkNotes.G4, d: 2 }, { f: folkNotes.A4, d: 4 },
+      { f: folkNotes.C5, d: 3 }, { f: folkNotes.D5, d: 1 }, { f: folkNotes.C5, d: 2 }, { f: folkNotes.A4, d: 2 },
+      { f: folkNotes.G4, d: 6 }, { f: folkNotes.REST, d: 4 }
+    ];
+
+    function stepBgmSequencer() {
+      if (!bgmEnabled) return;
+
+      const item = taiwanFolkScore[currentBgmNoteIndex];
+      const baseBeatTime = 165; // Milliseconds per 16th unit
+      const noteDurationMs = item.d * baseBeatTime;
+
+      if (item.f > 0) {
+        playBgmNote(item.f, (noteDurationMs / 1000) * 0.92);
+      }
+
+      currentBgmNoteIndex = (currentBgmNoteIndex + 1) % taiwanFolkScore.length;
+      bgmTimer = setTimeout(stepBgmSequencer, noteDurationMs);
+    }
+
+    function startBgm() {
+      initAudio();
+      if (!bgmTimer && bgmEnabled) {
+        currentBgmNoteIndex = 0;
+        stepBgmSequencer();
+      }
+    }
+
+    function stopBgm() {
+      if (bgmTimer) {
+        clearTimeout(bgmTimer);
+        bgmTimer = null;
+      }
+    }
+
+    function toggleBgm() {
+      initAudio();
+      bgmEnabled = !bgmEnabled;
+      const icon = document.getElementById('bgmIcon');
+      const text = document.getElementById('bgmText');
+
+      if (bgmEnabled) {
+        icon.className = 'note-active';
+        icon.innerText = '🎵';
+        text.innerText = '民謠音樂：開';
+        if (bgmGainNode) {
+          bgmGainNode.gain.cancelScheduledValues(audioCtx.currentTime);
+          bgmGainNode.gain.setValueAtTime(bgmMasterVolume, audioCtx.currentTime);
+        }
+        startBgm();
+      } else {
+        icon.className = '';
+        icon.innerText = '🔇';
+        text.innerText = '民謠音樂：關';
+        if (bgmGainNode) {
+          bgmGainNode.gain.cancelScheduledValues(audioCtx.currentTime);
+          bgmGainNode.gain.setValueAtTime(0, audioCtx.currentTime);
+        }
+        stopBgm();
+      }
+    }
+
+    function adjustBgmVolume(val) {
+      bgmMasterVolume = parseFloat(val);
+      if (bgmGainNode && bgmEnabled && audioCtx) {
+        bgmGainNode.gain.cancelScheduledValues(audioCtx.currentTime);
+        bgmGainNode.gain.setValueAtTime(bgmMasterVolume, audioCtx.currentTime);
+      }
+    }
+
+    // Play a single procedural tone with envelope
     function playTone(freq, duration, type = 'sine', gainLevel = 0.15) {
       if (!soundEnabled) return;
       try {
@@ -348,37 +651,141 @@
       }
     }
 
+    // 1. Procedural 3D Tumbling Dice Sound (Rattle & click)
     function playDiceTick() {
-      playTone(320 + Math.random() * 260, 0.06, 'triangle', 0.12);
+      if (!soundEnabled) return;
+      initAudio();
+      duckBgm(0.3, 0.1);
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(260 + Math.random() * 320, audioCtx.currentTime);
+      gain.gain.setValueAtTime(0.12, audioCtx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.05);
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.start();
+      osc.stop(audioCtx.currentTime + 0.05);
     }
 
+    // 2. Procedural Marimba Ascending Hop Step Sound
     function playHopStep(stepIdx) {
-      const baseFreq = 420 + (stepIdx * 45);
-      playTone(baseFreq, 0.12, 'sine', 0.18);
+      if (!soundEnabled) return;
+      initAudio();
+      duckBgm(0.4, 0.1);
+      const scale = [392.00, 440.00, 523.25, 587.33, 659.25, 783.99, 880.00];
+      const freq = scale[stepIdx % scale.length];
+      
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+      
+      gain.gain.setValueAtTime(0.24, audioCtx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.18);
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.start();
+      osc.stop(audioCtx.currentTime + 0.18);
     }
 
-    function playSuccessChime() {
+    // 3. Procedural Wind-Chime Glissando for Station Openings
+    function playChimeSweep() {
       if (!soundEnabled) return;
-      try {
-        initAudio();
-        const notes = [523.25, 659.25, 783.99, 1046.50]; // C5, E5, G5, C6
-        notes.forEach((freq, idx) => {
-          setTimeout(() => {
-            playTone(freq, 0.35, 'triangle', 0.2);
-          }, idx * 110);
-        });
-      } catch (e) {}
+      initAudio();
+      duckBgm(1.5, 0.1);
+      const notes = [587.33, 659.25, 783.99, 880.00, 1046.50, 1174.66, 1318.51];
+      notes.forEach((freq, idx) => {
+        setTimeout(() => {
+          playTone(freq, 0.45, 'triangle', 0.14);
+        }, idx * 60);
+      });
     }
 
-    function playCheerFanfare() {
+    // 4. Procedural Temple Woodblock (Metronome Pacing Tick)
+    function playWoodblock(isHigh = false) {
       if (!soundEnabled) return;
+      initAudio();
+      duckBgm(0.3, 0.2);
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(isHigh ? 980 : 720, audioCtx.currentTime);
+      gain.gain.setValueAtTime(0.18, audioCtx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.08);
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.start();
+      osc.stop(audioCtx.currentTime + 0.08);
+    }
+
+    // 5. Procedural Pitch-Ascending Rep Chime (Biofeedback)
+    function playAscendingRepNote(repCount) {
+      if (!soundEnabled) return;
+      initAudio();
+      duckBgm(0.5, 0.15);
+      const pentatonicBase = [261.63, 293.66, 329.63, 392.00, 440.00, 523.25, 587.33, 659.25, 783.99, 880.00, 1046.50];
+      const freq = pentatonicBase[Math.min(repCount, pentatonicBase.length - 1)];
+      
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+      gain.gain.setValueAtTime(0.25, audioCtx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.28);
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.start();
+      osc.stop(audioCtx.currentTime + 0.28);
+    }
+
+    // 6. Procedural Victory Fanfare (Brass Triad + Major 7th Chord)
+    function playVictoryFanfare() {
+      if (!soundEnabled) return;
+      initAudio();
+      duckBgm(2.5, 0.05);
+      const chords = [
+        { freqs: [523.25, 659.25, 783.99], time: 0, dur: 0.25 },
+        { freqs: [587.33, 739.99, 880.00], time: 260, dur: 0.25 },
+        { freqs: [659.25, 830.61, 987.77], time: 520, dur: 0.35 },
+        { freqs: [1046.50, 1318.51, 1567.98], time: 880, dur: 0.85 }
+      ];
+
+      chords.forEach(c => {
+        setTimeout(() => {
+          c.freqs.forEach(f => playTone(f, c.dur, 'triangle', 0.16));
+        }, c.time);
+      });
+    }
+
+    // 7. Procedural Crowd Cheering & Applause Simulator
+    function playCrowdCheer() {
+      if (!soundEnabled) return;
+      initAudio();
+      duckBgm(2.5, 0.05);
       try {
-        initAudio();
-        const notes = [440, 554.37, 659.25, 880];
-        notes.forEach((freq, idx) => {
-          setTimeout(() => playTone(freq, 0.28, 'sine', 0.22), idx * 100);
-        });
-      } catch (e) {}
+        const bufferSize = audioCtx.sampleRate * 1.5;
+        const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+        const data = buffer.getChannelData(0);
+        for (let i = 0; i < bufferSize; i++) {
+          data[i] = (Math.random() * 2 - 1) * Math.exp(-i / (audioCtx.sampleRate * 0.8));
+        }
+        const noise = audioCtx.createBufferSource();
+        noise.buffer = buffer;
+        const filter = audioCtx.createBiquadFilter();
+        filter.type = 'bandpass';
+        filter.frequency.setValueAtTime(950, audioCtx.currentTime);
+        filter.Q.setValueAtTime(1.8, audioCtx.currentTime);
+        const gain = audioCtx.createGain();
+        gain.gain.setValueAtTime(0.18, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 1.5);
+        noise.connect(filter);
+        filter.connect(gain);
+        gain.connect(audioCtx.destination);
+        noise.start();
+      } catch (e) {
+        playVictoryFanfare();
+      }
     }
 
     function toggleSound() {
@@ -386,11 +793,11 @@
       const soundIcon = document.getElementById('soundIcon');
       const soundText = document.getElementById('soundText');
       if (soundEnabled) {
-        soundIcon.innerText = '🔊';
+        soundIcon.innerText = '🔔';
         soundText.innerText = '音效開';
         playTone(600, 0.15);
       } else {
-        soundIcon.innerText = '🔇';
+        soundIcon.innerText = '🔕';
         soundText.innerText = '音效關';
       }
     }
@@ -398,7 +805,6 @@
 
   <script>
     // 18 Stations: Taiwan main island + Penghu
-    // All questions preserved, all teacher/coach hints stripped.
     const boardStations = [
       {
         id: 0,
@@ -407,6 +813,7 @@
         icon: "🥣",
         type: "muscle",
         task: "雙手握拳向前推 10 下，像在推大蒸籠一樣把香氣推出去！",
+        reps: 10,
         grid: { row: 1, col: 1 }
       },
       {
@@ -416,6 +823,7 @@
         icon: "🍵",
         type: "cognitive",
         task: "請說出 3 種泡茶時長輩最喜歡吃的傳統點心或茶食！",
+        reps: 3,
         grid: { row: 1, col: 2 }
       },
       {
@@ -425,6 +833,7 @@
         icon: "🍠",
         type: "muscle",
         task: "坐好挺胸，雙手雙腳輪流踏步 15 下，像在九份老街爬石梯！",
+        reps: 15,
         grid: { row: 1, col: 3 }
       },
       {
@@ -434,6 +843,7 @@
         icon: "🥢",
         type: "cognitive",
         task: "請說出 3 種豆腐或黃豆製成的美味料理！",
+        reps: 3,
         grid: { row: 1, col: 4 }
       },
       {
@@ -443,6 +853,7 @@
         icon: "🥟",
         type: "muscle",
         task: "雙手在空中做「捏摃丸」動作，用力抓緊拳頭再全力張開手指 12 次！",
+        reps: 12,
         grid: { row: 1, col: 5 }
       },
       {
@@ -452,6 +863,7 @@
         icon: "🍓",
         type: "cognitive",
         task: "請快速說出 3 種紅色的水果！",
+        reps: 3,
         grid: { row: 1, col: 6 }
       },
       {
@@ -461,6 +873,7 @@
         icon: "☀️",
         type: "muscle",
         task: "雙手合十由胸前向上伸展，在空中畫一個大大的太陽 6 次！",
+        reps: 6,
         grid: { row: 2, col: 6 }
       },
       {
@@ -470,6 +883,7 @@
         icon: "🥟",
         type: "cognitive",
         task: "吃肉圓最想沾甜米醬還是辣椒醬？全隊長輩大聲喊出最愛的吃法！",
+        reps: 1,
         grid: { row: 3, col: 6 }
       },
       {
@@ -479,6 +893,7 @@
         icon: "☕",
         type: "muscle",
         task: "雙手在胸前左右輪流做「端茶杯向左右鄰居敬茶」轉體伸展動作 8 次！",
+        reps: 8,
         grid: { row: 4, col: 6 }
       },
       {
@@ -488,6 +903,7 @@
         icon: "☕",
         type: "muscle",
         task: "坐姿雙手扶椅，雙腳膝蓋輪流向上抬起各 8 下！",
+        reps: 16,
         grid: { row: 5, col: 6 }
       },
       {
@@ -497,6 +913,7 @@
         icon: "🍚",
         type: "cognitive",
         task: "請說出道地火雞肉飯最常見的 2 種配料（如黃蘿蔔、油蔥酥等）！",
+        reps: 2,
         grid: { row: 5, col: 5 }
       },
       {
@@ -506,6 +923,7 @@
         icon: "🍤",
         type: "muscle",
         task: "雙腳坐姿輪流做「腳尖著地提腳跟」與「腳跟著地翹腳尖」12 次，促進下肢血液循環！",
+        reps: 12,
         grid: { row: 5, col: 4 }
       },
       {
@@ -515,6 +933,7 @@
         icon: "🍢",
         type: "cognitive",
         task: "請說出 3 樣到海邊、港口或漁港會買的海鮮特產！",
+        reps: 3,
         grid: { row: 5, col: 3 }
       },
       {
@@ -524,6 +943,7 @@
         icon: "🍖",
         type: "muscle",
         task: "坐好挺胸，單腳向前平舉伸直小腿停留 3 秒，雙腳各做 4 次！",
+        reps: 8,
         grid: { row: 5, col: 2 }
       },
       {
@@ -533,6 +953,7 @@
         icon: "🍈",
         type: "cognitive",
         task: "請說出台東一個知名的景點（例如知本溫泉、伯朗大道、三仙台等）！",
+        reps: 1,
         grid: { row: 5, col: 1 }
       },
       {
@@ -542,6 +963,7 @@
         icon: "🍡",
         type: "muscle",
         task: "像擣麻糬一樣，雙手握空拳由上往下輕輕拍捶大腿前側與外側放鬆 15 次！",
+        reps: 15,
         grid: { row: 4, col: 1 }
       },
       {
@@ -551,6 +973,7 @@
         icon: "🧅",
         type: "cognitive",
         task: "青蔥是料理的好幫手！請說出 2 道一定要加蔥才好吃的家常菜！",
+        reps: 2,
         grid: { row: 3, col: 1 }
       },
       {
@@ -560,20 +983,27 @@
         icon: "🧁",
         type: "muscle",
         task: "雙手向兩側水平展開像海鷗拍翅膀，緩慢向上拍動伸展肩關節 10 次！",
+        reps: 10,
         grid: { row: 2, col: 1 }
       }
     ];
 
-    // State Variables
+    // State
     let currentTurn = 'red'; // 'red' or 'blue'
     let isRolling = false;
     const scores = { red: 0, blue: 0 };
     const positions = { red: 0, blue: 0 }; // 0 to 17
     let currentModalStation = null;
+
+    // Biofeedback state
+    let metronomeActive = false;
+    let metronomeTimer = null;
+    let metronomePhase = 0;
+    let currentStationReps = 0;
+    let targetStationReps = 10;
   </script>
 
   <script>
-    // Render Board Grid
     function renderBoard() {
       const container = document.querySelector('.board-grid');
       
@@ -616,7 +1046,6 @@
       updateTurnUI();
     }
 
-    // Render Dice Face Pip Configuration
     function renderDiceFace(value) {
       const face = document.getElementById('diceFaceDisplay');
       face.innerHTML = '';
@@ -640,20 +1069,19 @@
       });
     }
 
-    // Update tokens on the board
     function updateTokenPositions() {
       for (let i = 0; i < boardStations.length; i++) {
         const box = document.getElementById(`token-box-${i}`);
         if (box) box.innerHTML = '';
         const tile = document.getElementById(`station-${i}`);
-        if (tile) tile.classList.remove('tile-highlight');
+        if (tile) tile.classList.remove('tile-spotlight');
       }
 
       // Red Token
       const redBox = document.getElementById(`token-box-${positions.red}`);
       if (redBox) {
         const redPiece = document.createElement('div');
-        redPiece.className = 'w-6 h-6 md:w-7 md:h-7 rounded-full bg-rose-500 text-white flex items-center justify-center text-xs font-black shadow-md border-2 border-white token-floating';
+        redPiece.className = 'w-6 h-6 md:w-7 md:h-7 rounded-full bg-rose-500 text-white flex items-center justify-center text-xs font-black shadow-md border-2 border-white animate-bounce';
         redPiece.title = '紅隊位置';
         redPiece.innerHTML = '🍎';
         redBox.appendChild(redPiece);
@@ -663,17 +1091,17 @@
       const blueBox = document.getElementById(`token-box-${positions.blue}`);
       if (blueBox) {
         const bluePiece = document.createElement('div');
-        bluePiece.className = 'w-6 h-6 md:w-7 md:h-7 rounded-full bg-sky-500 text-white flex items-center justify-center text-xs font-black shadow-md border-2 border-white token-floating';
+        bluePiece.className = 'w-6 h-6 md:w-7 md:h-7 rounded-full bg-sky-500 text-white flex items-center justify-center text-xs font-black shadow-md border-2 border-white animate-bounce';
         bluePiece.title = '藍隊位置';
         bluePiece.innerHTML = '🚙';
         blueBox.appendChild(bluePiece);
       }
 
-      // Highlight active team tile
+      // Active Spotlight Glow
       const activeIdx = positions[currentTurn];
       const activeTile = document.getElementById(`station-${activeIdx}`);
       if (activeTile) {
-        activeTile.classList.add('tile-highlight');
+        activeTile.classList.add('tile-spotlight');
       }
 
       // Update location indicator
@@ -683,7 +1111,6 @@
         `第${positions.blue + 1}站 ${boardStations[positions.blue].city} (${boardStations[positions.blue].food})`;
     }
 
-    // Update Turn Header & Banner UI
     function updateTurnUI() {
       const isRed = currentTurn === 'red';
       const redName = document.getElementById('redTeamName').value || '吉祥紅隊';
@@ -693,28 +1120,31 @@
       const blueCard = document.getElementById('blueTeamCard');
       const redBadge = document.getElementById('redBadge');
       const blueBadge = document.getElementById('blueBadge');
+      const ambient = document.getElementById('ambientGlowOverlay');
 
       if (isRed) {
-        redCard.classList.add('border-rose-500', 'bg-rose-50/60', 'scale-[1.02]');
+        redCard.classList.add('border-rose-500', 'bg-rose-50/70', 'scale-[1.02]');
         redCard.classList.remove('border-slate-200');
         redBadge.classList.remove('hidden');
 
-        blueCard.classList.remove('border-sky-500', 'bg-sky-50/60', 'scale-[1.02]');
+        blueCard.classList.remove('border-sky-500', 'bg-sky-50/70', 'scale-[1.02]');
         blueCard.classList.add('border-slate-200');
         blueBadge.classList.add('hidden');
 
+        ambient.style.boxShadow = 'inset 0 0 75px 12px rgba(239, 68, 68, 0.25)';
         document.getElementById('turnBanner').innerHTML = `🍎 ${redName} 請擲骰`;
         document.getElementById('centerCurrentTeamSpan').innerText = redName;
         document.getElementById('centerCurrentTeamSpan').className = 'text-rose-600 underline decoration-rose-300 underline-offset-4';
       } else {
-        blueCard.classList.add('border-sky-500', 'bg-sky-50/60', 'scale-[1.02]');
+        blueCard.classList.add('border-sky-500', 'bg-sky-50/70', 'scale-[1.02]');
         blueCard.classList.remove('border-slate-200');
         blueBadge.classList.remove('hidden');
 
-        redCard.classList.remove('border-rose-500', 'bg-rose-50/60', 'scale-[1.02]');
+        redCard.classList.remove('border-rose-500', 'bg-rose-50/70', 'scale-[1.02]');
         redCard.classList.add('border-slate-200');
         redBadge.classList.add('hidden');
 
+        ambient.style.boxShadow = 'inset 0 0 75px 12px rgba(14, 165, 233, 0.25)';
         document.getElementById('turnBanner').innerHTML = `🚙 ${blueName} 請擲骰`;
         document.getElementById('centerCurrentTeamSpan').innerText = blueName;
         document.getElementById('centerCurrentTeamSpan').className = 'text-sky-600 underline decoration-sky-300 underline-offset-4';
@@ -723,7 +1153,6 @@
   </script>
 
   <script>
-    // Independent Random Integer 1 to 6
     function getRandomDiceRoll() {
       if (window.crypto && window.crypto.getRandomValues) {
         const arr = new Uint32Array(1);
@@ -733,11 +1162,11 @@
       return Math.floor(Math.random() * 6) + 1;
     }
 
-    // Roll Dice Action
     function rollDiceAction() {
       if (isRolling) return;
       isRolling = true;
       initAudio();
+      startBgm();
 
       const btn = document.getElementById('rollDiceBtn');
       btn.disabled = true;
@@ -749,7 +1178,7 @@
         ? (document.getElementById('redTeamName').value || '紅隊') 
         : (document.getElementById('blueTeamName').value || '藍隊');
 
-      // True random integer from 1 to 6
+      // True independent random roll
       const finalSteps = getRandomDiceRoll();
 
       let rollTicks = 0;
@@ -759,12 +1188,11 @@
         rollTicks++;
         playDiceTick();
 
-        // 3D tumble animation
+        // 3D tumble angles
         const randX = Math.floor(Math.random() * 360);
         const randY = Math.floor(Math.random() * 360);
         cube.style.transform = `rotateX(${randX}deg) rotateY(${randY}deg)`;
 
-        // Pip preview while rolling
         const tempFace = Math.floor(Math.random() * 6) + 1;
         renderDiceFace(tempFace);
         tip.innerText = `🎲 ${activeTeamName} 骰子旋轉中...`;
@@ -784,7 +1212,6 @@
       }, 90);
     }
 
-    // Step-by-step token hopping
     function stepByStepMovement(remainingSteps, currentStepCount) {
       if (remainingSteps <= 0) {
         isRolling = false;
@@ -806,14 +1233,31 @@
       playHopStep(currentStepCount);
       updateTokenPositions();
 
+      // Hop bounce on active tile
+      const targetTile = document.getElementById(`station-${positions[currentTurn]}`);
+      if (targetTile) {
+        targetTile.classList.add('tile-hop-bounce');
+        setTimeout(() => targetTile.classList.remove('tile-hop-bounce'), 350);
+      }
+
       setTimeout(() => {
         stepByStepMovement(remainingSteps - 1, currentStepCount + 1);
       }, 350);
     }
 
-    // Open Modal: Displays pure question, completely without teacher tips/hints
     function openStationModal(station) {
       currentModalStation = station;
+      initAudio();
+      startBgm();
+      playChimeSweep();
+
+      // Reset biofeedback counter
+      currentStationReps = 0;
+      targetStationReps = station.reps || 10;
+      document.getElementById('currentRepsBadge').innerText = '0';
+      document.getElementById('targetRepsSpan').innerText = targetStationReps;
+      document.getElementById('repFeedbackTip').innerText = '每按一下音階漸升並伴隨彩虹波紋，達標即爆發勝利號角！';
+
       const modal = document.getElementById('taskModal');
       const content = document.getElementById('taskModalContent');
       const isMuscle = station.type === 'muscle';
@@ -832,17 +1276,20 @@
       headerEmoji.innerText = station.icon;
 
       if (isMuscle) {
-        headerBg.className = 'p-6 md:p-8 text-white flex items-center justify-between bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600';
+        headerBg.className = 'p-5 md:p-7 text-white flex items-center justify-between bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600';
         typeBadge.innerText = '💪 肌力挑戰';
         typeIcon.innerText = '💪';
       } else {
-        headerBg.className = 'p-6 md:p-8 text-white flex items-center justify-between bg-gradient-to-r from-indigo-600 via-blue-600 to-indigo-700';
+        headerBg.className = 'p-5 md:p-7 text-white flex items-center justify-between bg-gradient-to-r from-indigo-600 via-blue-600 to-indigo-700';
         typeBadge.innerText = '🧠 認知挑戰';
         typeIcon.innerText = '🧠';
       }
 
       document.getElementById('taskCityTitle').innerText = `${station.city}・${station.food}`;
       document.getElementById('taskQuestionText').innerText = station.task;
+
+      // Reset metronome state
+      stopMetronome();
 
       modal.classList.remove('hidden');
       setTimeout(() => {
@@ -858,18 +1305,147 @@
   </script>
 
   <script>
-    // Award score points
+    // Biofeedback Metronome: 4-count breathing & movement pace
+    function toggleMetronome() {
+      if (metronomeActive) {
+        stopMetronome();
+      } else {
+        startMetronome();
+      }
+    }
+
+    function startMetronome() {
+      initAudio();
+      startBgm();
+      metronomeActive = true;
+      const btn = document.getElementById('metroToggleBtn');
+      btn.innerText = '⏹ 暫停節奏';
+      btn.className = 'text-xs font-black bg-rose-600 hover:bg-rose-700 text-white px-3 py-1 rounded-full shadow-sm transition';
+
+      const orb = document.getElementById('breathingOrb');
+      const status = document.getElementById('metroTextStatus');
+      const guide = document.getElementById('metroPacingGuide');
+
+      metronomePhase = 0;
+      runMetronomeStep();
+      metronomeTimer = setInterval(runMetronomeStep, 1300);
+    }
+
+    function runMetronomeStep() {
+      const orb = document.getElementById('breathingOrb');
+      const status = document.getElementById('metroTextStatus');
+      const guide = document.getElementById('metroPacingGuide');
+
+      // 2-step breathing loop: Expand (exhale/push) vs Relax (inhale/return)
+      if (metronomePhase % 2 === 0) {
+        orb.className = 'breathing-orb expand flex items-center justify-center text-white font-black text-sm';
+        status.innerText = '用力';
+        guide.innerHTML = '<span class="text-amber-600">【呼氣】用力伸展／推抬！</span>';
+        playWoodblock(true);
+      } else {
+        orb.className = 'breathing-orb contract flex items-center justify-center text-white font-black text-sm';
+        status.innerText = '放鬆';
+        guide.innerHTML = '<span class="text-emerald-700">【吸氣】緩慢收回放鬆～</span>';
+        playWoodblock(false);
+      }
+      metronomePhase++;
+    }
+
+    function stopMetronome() {
+      metronomeActive = false;
+      if (metronomeTimer) {
+        clearInterval(metronomeTimer);
+        metronomeTimer = null;
+      }
+      const btn = document.getElementById('metroToggleBtn');
+      if (btn) {
+        btn.innerText = '▶ 開啟節奏引導';
+        btn.className = 'text-xs font-black bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1 rounded-full shadow-sm transition';
+      }
+      const orb = document.getElementById('breathingOrb');
+      if (orb) {
+        orb.className = 'breathing-orb flex items-center justify-center text-white font-black text-sm';
+      }
+      const status = document.getElementById('metroTextStatus');
+      if (status) status.innerText = '預備';
+      const guide = document.getElementById('metroPacingGuide');
+      if (guide) guide.innerText = '跟隨光圈大小均勻呼吸與動作';
+    }
+
+    // Biofeedback Rep Shockwave Action
+    function triggerRepAction(event) {
+      initAudio();
+      startBgm();
+      currentStationReps++;
+      
+      const badge = document.getElementById('currentRepsBadge');
+      badge.innerText = currentStationReps;
+      badge.classList.add('scale-125');
+      setTimeout(() => badge.classList.remove('scale-125'), 180);
+
+      // Play ascending pentatonic chime
+      playAscendingRepNote(currentStationReps);
+
+      // Visual Ripple shockwave
+      createShockwave(event);
+
+      // Flash ambient edge glow golden
+      const ambient = document.getElementById('ambientGlowOverlay');
+      ambient.style.boxShadow = 'inset 0 0 100px 25px rgba(245, 158, 11, 0.6)';
+      setTimeout(() => {
+        const isRed = currentTurn === 'red';
+        ambient.style.boxShadow = isRed 
+          ? 'inset 0 0 75px 12px rgba(239, 68, 68, 0.25)' 
+          : 'inset 0 0 75px 12px rgba(14, 165, 233, 0.25)';
+      }, 400);
+
+      // Reached Target: Big sensory celebration!
+      if (currentStationReps >= targetStationReps) {
+        document.getElementById('repFeedbackTip').innerHTML = 
+          '🎉 <span class="text-emerald-700 font-black text-sm">太棒了！已達成目標次數！</span>';
+        
+        playVictoryFanfare();
+        playCrowdCheer();
+
+        if (typeof confetti === 'function') {
+          confetti({
+            particleCount: 100,
+            spread: 90,
+            origin: { y: 0.6 }
+          });
+        }
+      }
+    }
+
+    function createShockwave(e) {
+      const container = document.getElementById('rippleContainer');
+      const ripple = document.createElement('div');
+      ripple.className = 'ripple-effect';
+      
+      ripple.style.left = '50%';
+      ripple.style.top = '50%';
+      container.appendChild(ripple);
+
+      setTimeout(() => {
+        ripple.remove();
+      }, 750);
+    }
+
     function awardScore(points) {
       scores[currentTurn] += points;
-      document.getElementById(`${currentTurn}Score`).innerText = scores[currentTurn];
+      const scoreElem = document.getElementById(`${currentTurn}Score`);
+      scoreElem.innerText = scores[currentTurn];
+      scoreElem.classList.add('score-pop');
+      setTimeout(() => scoreElem.classList.remove('score-pop'), 600);
       
-      playSuccessChime();
+      playVictoryFanfare();
+      playCrowdCheer();
 
       if (typeof confetti === 'function') {
         confetti({
-          particleCount: 75,
-          spread: 80,
-          origin: { y: 0.6 }
+          particleCount: 120,
+          spread: 100,
+          origin: { y: 0.55 }
         });
       }
 
@@ -877,7 +1453,6 @@
       nextTurn();
     }
 
-    // Prompt custom score input
     function promptCustomScore() {
       const input = prompt("請輸入給長輩的自訂得分（數字）：", "15");
       if (input !== null) {
@@ -888,13 +1463,13 @@
       }
     }
 
-    // Skip and pass turn without points
     function skipAndNext() {
       closeTaskModal();
       nextTurn();
     }
 
     function closeTaskModal() {
+      stopMetronome();
       const modal = document.getElementById('taskModal');
       const content = document.getElementById('taskModalContent');
       content.classList.add('scale-95');
@@ -904,7 +1479,6 @@
       }, 150);
     }
 
-    // Pass turn to the other team
     function nextTurn() {
       currentTurn = (currentTurn === 'red') ? 'blue' : 'red';
       updateTurnUI();
@@ -920,19 +1494,27 @@
       document.getElementById('diceTipText').innerText = `請 ${teamName} 的長輩代表點擊「按我擲骰子」！`;
     }
 
-    // Cheering fanfare
-    function triggerCheer() {
-      playCheerFanfare();
+    function triggerFullApplause() {
+      initAudio();
+      startBgm();
+      playVictoryFanfare();
+      playCrowdCheer();
+
+      const ambient = document.getElementById('ambientGlowOverlay');
+      ambient.style.boxShadow = 'inset 0 0 120px 30px rgba(245, 158, 11, 0.7)';
+      setTimeout(() => {
+        updateTurnUI();
+      }, 800);
+
       if (typeof confetti === 'function') {
         confetti({
-          particleCount: 90,
+          particleCount: 110,
           spread: 90,
           origin: { y: 0.5 }
         });
       }
     }
 
-    // Reset game logic
     function resetGame() {
       scores.red = 0;
       scores.blue = 0;
@@ -943,7 +1525,7 @@
 
       document.getElementById('redScore').innerText = '0';
       document.getElementById('blueScore').innerText = '0';
-      document.getElementById('diceTipText').innerText = '點擊擲骰子，隨機出現 1 ~ 6 步！';
+      document.getElementById('diceTipText').innerText = '點擊大按鈕，隨機出現 1 ~ 6 步！';
       
       closeTaskModal();
       renderDiceFace(1);
@@ -951,7 +1533,6 @@
       updateTurnUI();
     }
 
-    // Fullscreen presentation toggle
     function toggleFullScreen() {
       if (!document.fullscreenElement) {
         document.documentElement.requestFullscreen().catch(err => {
@@ -964,10 +1545,17 @@
       }
     }
 
-    // Initialize on window load
     window.addEventListener('DOMContentLoaded', () => {
       renderBoard();
-      document.body.addEventListener('click', initAudio, { once: true });
+      // Browser autoplay policy handler: starts audio on first user touch/click anywhere
+      const triggerAudioStart = () => {
+        initAudio();
+        startBgm();
+        document.body.removeEventListener('click', triggerAudioStart);
+        document.body.removeEventListener('touchstart', triggerAudioStart);
+      };
+      document.body.addEventListener('click', triggerAudioStart, { once: true });
+      document.body.addEventListener('touchstart', triggerAudioStart, { once: true });
     });
   </script>
 </body>
